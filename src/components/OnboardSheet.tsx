@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as PtrEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as PtrEvent,
+} from "react";
 import { Link } from "react-router-dom";
 import {
   isOnboardDone,
@@ -11,18 +17,18 @@ import { Sheet } from "./Sheet.tsx";
 
 const STEPS = [
   {
-    title: "挑一套皮肤",
-    body: "四套样子，今晚用哪套随你。",
-    primary: "选主题",
-    action: "theme" as const,
-  },
-  {
     title: "找今晚吃什么",
     body: "摇一桌随机菜，或按分类慢慢挑。",
     primary: "去摇一桌",
     action: "roll" as const,
     secondary: "逛分类",
     secondaryTo: "/browse",
+  },
+  {
+    title: "挑一套皮肤",
+    body: "四套样子，今晚用哪套随你。",
+    primary: "选主题",
+    action: "theme" as const,
   },
   {
     title: "想吃 · 今晚 · 同步",
@@ -34,9 +40,15 @@ const STEPS = [
 
 export function OnboardSheet() {
   const { openThemes, rollTonight } = useApp();
-  const [open, setOpen] = useState(() => (typeof window === "undefined" ? false : !isOnboardDone()));
+  const [open, setOpen] = useState(() =>
+    typeof window === "undefined" ? false : !isOnboardDone(),
+  );
   const [step, setStep] = useState(0);
-  const swipe = useRef<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
+  const swipe = useRef<{ x: number; y: number; active: boolean }>({
+    x: 0,
+    y: 0,
+    active: false,
+  });
 
   useEffect(() => {
     const onReplay = () => {
@@ -128,7 +140,11 @@ export function OnboardSheet() {
         <h3 className="onboard-title">{cur.title}</h3>
         <p className="onboard-body">{cur.body}</p>
         <div className="onboard-actions">
-          <button type="button" className="btn-primary onboard-primary" onClick={onPrimary}>
+          <button
+            type="button"
+            className="btn-primary onboard-primary"
+            onClick={onPrimary}
+          >
             {cur.primary}
           </button>
           {"secondary" in cur && cur.secondary && cur.secondaryTo ? (
@@ -143,16 +159,28 @@ export function OnboardSheet() {
             </Link>
           ) : null}
           {!isLast ? (
-            <button type="button" className="btn-ghost onboard-next" onClick={goNext}>
+            <button
+              type="button"
+              className="btn-ghost onboard-next"
+              onClick={goNext}
+            >
               下一步
             </button>
           ) : null}
         </div>
         <div className="onboard-dismiss-row">
-          <button type="button" className="btn-ghost onboard-skip" onClick={finish}>
+          <button
+            type="button"
+            className="btn-ghost onboard-skip"
+            onClick={finish}
+          >
             跳过引导
           </button>
-          <button type="button" className="linkish onboard-close" onClick={finish}>
+          <button
+            type="button"
+            className="linkish onboard-close"
+            onClick={finish}
+          >
             关闭
           </button>
         </div>

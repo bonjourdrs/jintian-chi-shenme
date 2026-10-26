@@ -1,6 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CatPaint, EmptyArt } from "../components/Art.tsx";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { DishCard } from "../components/DishCard.tsx";
 import { ChipsFade } from "../components/ChipsFade.tsx";
 import { firstRowPriorityCount } from "../lib/coverPriority.ts";
@@ -8,7 +13,14 @@ import { oncePrimary } from "../lib/primaryGuard.ts";
 import { DishGridSkeleton } from "../components/DishGridSkeleton.tsx";
 import { BackIcon, SearchIcon } from "../components/Icons.tsx";
 import { ThemeButton } from "../components/ThemeSheet.tsx";
-import { categories, dishes, dishesIn, searchDishes, sortDishes, type DishSortMode } from "../data/catalog.ts";
+import {
+  categories,
+  dishes,
+  dishesIn,
+  searchDishes,
+  sortDishes,
+  type DishSortMode,
+} from "../data/catalog.ts";
 import { recipeFor } from "../data/recipes.ts";
 import { loadRefinedOnly, saveRefinedOnly } from "../lib/refinedOnly.ts";
 import { useTitle } from "../lib/useTitle.ts";
@@ -39,7 +51,8 @@ function safeDecode(value: string): string {
 }
 
 export function DishListPage() {
-  const { rollTonight, rolling, rollCooling, addDishesToMenu, toast } = useApp();
+  const { rollTonight, rolling, rollCooling, addDishesToMenu, toast } =
+    useApp();
   const params = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,28 +63,13 @@ export function DishListPage() {
   const [limit, setLimit] = useState(PAGE_SIZE);
   /** Brief skeleton while category / sort / query identity flips (data is sync — keep it short). */
   const [listPending, setListPending] = useState(true);
-  const [searchHist, setSearchHist] = useState<string[]>(() => loadSearchHistory());
+  const [searchHist, setSearchHist] = useState<string[]>(() =>
+    loadSearchHistory(),
+  );
   const [refinedOnly, setRefinedOnly] = useState(() => loadRefinedOnly());
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const lastSelectRef = useRef<string | null>(null);
-  const [isDesk, setIsDesk] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(min-width: 880px)").matches : false,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 880px)");
-    const sync = () => {
-      setIsDesk(mq.matches);
-      if (!mq.matches) {
-        setSelectMode(false);
-        setSelected([]);
-      }
-    };
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-
 
   useEffect(() => {
     const onRefresh = () => setRefreshNonce((n) => n + 1);
@@ -94,7 +92,9 @@ export function DishListPage() {
     return () => window.removeEventListener("jte-clear-search", onClear);
   }, [setSearchParams]);
 
-  const [priorityCount, setPriorityCount] = useState(() => firstRowPriorityCount());
+  const [priorityCount, setPriorityCount] = useState(() =>
+    firstRowPriorityCount(),
+  );
   useEffect(() => {
     const sync = () => setPriorityCount(firstRowPriorityCount());
     sync();
@@ -108,8 +108,11 @@ export function DishListPage() {
     let pool;
     if (category) {
       pool = dishesIn(category);
-      const needle = query.trim().toLowerCase();
-      if (needle) pool = pool.filter((dish) => dish.name.toLowerCase().includes(needle));
+      const needle = query.trim();
+      if (needle) {
+        const hits = new Set(searchDishes(needle).map((dish) => dish.id));
+        pool = pool.filter((dish) => hits.has(dish.id));
+      }
     } else if (query.trim()) {
       pool = searchDishes(query);
     } else {
@@ -137,9 +140,11 @@ export function DishListPage() {
       window.cancelAnimationFrame(id);
     };
   }, [category, query, sort]);
-  const title = category || (query.trim() ? `搜索「${query.trim()}」` : "全部菜");
+  const title =
+    category || (query.trim() ? `搜索「${query.trim()}」` : "全部菜");
   useTitle(title);
-  const sortMeta = SORT_OPTIONS.find((item) => item.id === sort) ?? SORT_OPTIONS[0];
+  const sortMeta =
+    SORT_OPTIONS.find((item) => item.id === sort) ?? SORT_OPTIONS[0];
 
   const back = () => {
     if (window.history.length > 1) navigate(-1);
@@ -167,7 +172,11 @@ export function DishListPage() {
   const toggleSelect = (id: string, shiftKey: boolean) => {
     setSelected((prev) => {
       const order = visibleIds;
-      if (shiftKey && lastSelectRef.current && order.includes(lastSelectRef.current)) {
+      if (
+        shiftKey &&
+        lastSelectRef.current &&
+        order.includes(lastSelectRef.current)
+      ) {
         const a = order.indexOf(lastSelectRef.current);
         const b = order.indexOf(id);
         if (a >= 0 && b >= 0) {
@@ -188,9 +197,15 @@ export function DishListPage() {
       return;
     }
     const { added, skipped } = addDishesToMenu(selected);
-    const go = skipped > 0 ? { actionLabel: "去看看", undo: () => navigate("/tonight") } : {};
+    const go =
+      skipped > 0
+        ? { actionLabel: "去看看", undo: () => navigate("/tonight") }
+        : {};
     if (added === 0) {
-      toast(skipped > 0 ? "勾选的都已在今晚" : "没有可加入的菜", { ms: 5200, ...go });
+      toast(skipped > 0 ? "勾选的都已在今晚" : "没有可加入的菜", {
+        ms: 5200,
+        ...go,
+      });
     } else {
       const bits = [`已把 ${added} 道加入今晚`];
       if (skipped) bits.push(`跳过 ${skipped} 道已在菜单`);
@@ -201,11 +216,15 @@ export function DishListPage() {
     hapticTap();
   };
 
-
   return (
     <div className="page">
       <header className="subhead">
-        <button type="button" className="icon-btn" onClick={back} aria-label="返回">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={back}
+          aria-label="返回"
+        >
           <BackIcon />
         </button>
         <div>
@@ -321,7 +340,9 @@ export function DishListPage() {
           {categories.map((item) => (
             <Link
               key={item.id}
-              className={category === item.id ? "chip chip-cat on" : "chip chip-cat"}
+              className={
+                category === item.id ? "chip chip-cat on" : "chip chip-cat"
+              }
               to={`/c/${encodeURIComponent(item.id)}`}
               aria-selected={category === item.id}
               role="tab"
@@ -335,12 +356,20 @@ export function DishListPage() {
         </div>
       </ChipsFade>
 
-      <div className="toolbar browse-filter-sticky" role="group" aria-label="筛选与排序">
+      <div
+        className="toolbar browse-filter-sticky"
+        role="group"
+        aria-label="筛选与排序"
+      >
         <p className="hint">{sortMeta.hint}</p>
         <div className="browse-filter-row">
           <button
             type="button"
-            className={refinedOnly ? "chip on browse-refine-chip" : "chip browse-refine-chip"}
+            className={
+              refinedOnly
+                ? "chip on browse-refine-chip"
+                : "chip browse-refine-chip"
+            }
             aria-pressed={refinedOnly}
             title="只看有精修菜谱的菜"
             onClick={() => {
@@ -353,7 +382,11 @@ export function DishListPage() {
             有精修
           </button>
         </div>
-        <div className="segmented sort-segmented" role="tablist" aria-label="排序">
+        <div
+          className="segmented sort-segmented"
+          role="tablist"
+          aria-label="排序"
+        >
           {SORT_OPTIONS.map((item) => (
             <button
               key={item.id}
@@ -370,9 +403,17 @@ export function DishListPage() {
       </div>
 
       {listPending ? (
-        <DishGridSkeleton count={8} className="is-browse-grid" label="加载菜单" />
+        <DishGridSkeleton
+          count={8}
+          className="is-browse-grid"
+          label="加载菜单"
+        />
       ) : ordered.length === 0 ? (
-        <div className={query.trim() || refinedOnly ? "empty search-empty" : "empty"}>
+        <div
+          className={
+            query.trim() || refinedOnly ? "empty search-empty" : "empty"
+          }
+        >
           <EmptyArt kind="search" />
           <strong>
             {query.trim()
@@ -420,7 +461,15 @@ export function DishListPage() {
               <Link className="btn-primary" to="/browse">
                 回全部菜单
               </Link>
-              <button type="button" className="btn-ghost" onClick={() => { if (!oncePrimary("roll")) return; rollTonight(); }} disabled={rolling || rollCooling}>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => {
+                  if (!oncePrimary("roll")) return;
+                  rollTonight();
+                }}
+                disabled={rolling || rollCooling}
+              >
                 随机开饭
               </button>
             </div>
@@ -428,48 +477,58 @@ export function DishListPage() {
         </div>
       ) : (
         <>
-          {isDesk ? (
-            <div className="desk-multi-bar" role="toolbar" aria-label="桌面多选">
-              {!selectMode ? (
+          <div
+            className="desk-multi-bar"
+            role="toolbar"
+            aria-label="批量选择菜品"
+          >
+            {!selectMode ? (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => {
+                  setSelectMode(true);
+                  setSelected([]);
+                }}
+              >
+                多选加入今晚
+              </button>
+            ) : (
+              <>
+                <span className="desk-multi-count">已选 {selected.length}</span>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={addSelectedToTonight}
+                  disabled={selected.length === 0}
+                >
+                  加入今晚
+                </button>
                 <button
                   type="button"
                   className="btn-ghost"
                   onClick={() => {
-                    setSelectMode(true);
+                    setSelectMode(false);
                     setSelected([]);
                   }}
                 >
-                  多选加入今晚
+                  取消
                 </button>
-              ) : (
-                <>
-                  <span className="desk-multi-count">已选 {selected.length}</span>
-                  <button type="button" className="btn-primary" onClick={addSelectedToTonight} disabled={selected.length === 0}>
-                    加入今晚
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => {
-                      setSelectMode(false);
-                      setSelected([]);
-                    }}
-                  >
-                    取消
-                  </button>
-                  <em className="hint desk-multi-hint">点选 · Shift 连选</em>
-                </>
-              )}
-            </div>
-          ) : null}
-          <div className="dish-grid is-browse-grid is-cards-ready" data-refresh={refreshNonce}>
+                <em className="hint desk-multi-hint">点选 · Shift 连选</em>
+              </>
+            )}
+          </div>
+          <div
+            className="dish-grid is-browse-grid is-cards-ready"
+            data-refresh={refreshNonce}
+          >
             {ordered.slice(0, limit).map((dish, index) => (
               <DishCard
                 key={dish.id}
                 dish={dish}
                 highlight={query.trim() || undefined}
                 priority={index < priorityCount}
-                selectMode={selectMode && isDesk}
+                selectMode={selectMode}
                 selected={selected.includes(dish.id)}
                 onToggleSelect={toggleSelect}
               />

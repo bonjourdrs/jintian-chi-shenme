@@ -1,10 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from "react";
+import { WeChatGuide } from "./WeChatGuide.tsx";
+import { RecoveryNotice } from "./RecoveryNotice.tsx";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type TouchEvent,
+} from "react";
 import { Link, useLocation } from "react-router-dom";
 import { dishById } from "../data/catalog.ts";
 import { buildShopping, uncheckedCount } from "../lib/shopping.ts";
 import { useApp } from "../state/store.tsx";
 import { DeskOrnament, Die, NavCodexIcon } from "./Art.tsx";
 import { HomeIcon, ListIcon, PeopleIcon } from "./Icons.tsx";
+import { Sheet } from "./Sheet.tsx";
 import { MealSheet } from "./MealSheet.tsx";
 import { InstallHint } from "./InstallHint.tsx";
 import { TopChips } from "./TopChips.tsx";
@@ -35,7 +46,20 @@ export function Shell({ children }: { children: ReactNode }) {
   }, []);
 
   const { pathname } = useLocation();
-  const { state, rolling, rollHint, themeOpen, mealOpen, toasts, toast, dismissToast } = useApp();
+  const {
+    state,
+    rolling,
+    rollHint,
+    themeOpen,
+    mealOpen,
+    toasts,
+    toast,
+    dismissToast,
+    rollChoiceOpen,
+    closeRollChoice,
+    replaceTonight,
+    fillTonight,
+  } = useApp();
   const scroller = useRef<HTMLDivElement>(null);
   const [showTop, setShowTop] = useState(false);
   const [pullY, setPullY] = useState(0);
@@ -80,7 +104,9 @@ export function Shell({ children }: { children: ReactNode }) {
   };
   const modal = rolling || themeOpen || mealOpen;
   const pullable =
-    pathname === "/" || pathname.startsWith("/browse") || pathname.startsWith("/c/");
+    pathname === "/" ||
+    pathname.startsWith("/browse") ||
+    pathname.startsWith("/c/");
   const longList =
     pathname === "/" ||
     pathname.startsWith("/c/") ||
@@ -93,7 +119,11 @@ export function Shell({ children }: { children: ReactNode }) {
       toast("封面暂时加载不出，已改用占位图 · 点封面可重试一次", { ms: 4200 });
     };
     window.addEventListener("jte-cover-fail-flood", onFlood as EventListener);
-    return () => window.removeEventListener("jte-cover-fail-flood", onFlood as EventListener);
+    return () =>
+      window.removeEventListener(
+        "jte-cover-fail-flood",
+        onFlood as EventListener,
+      );
   }, [toast]);
 
   useEffect(() => {
@@ -177,7 +207,12 @@ export function Shell({ children }: { children: ReactNode }) {
         pull.current.active = false;
         return;
       }
-      pull.current = { active: true, startY: event.touches[0]?.clientY ?? 0, armed: false, dist: 0 };
+      pull.current = {
+        active: true,
+        startY: event.touches[0]?.clientY ?? 0,
+        armed: false,
+        dist: 0,
+      };
     },
     [pullable, modal],
   );
@@ -224,7 +259,13 @@ export function Shell({ children }: { children: ReactNode }) {
       extras: state.extras,
       bought: state.bought,
     });
-  }, [state.bought, state.extras, state.ledger, state.menuDishIds, state.menuLedgerIds]);
+  }, [
+    state.bought,
+    state.extras,
+    state.ledger,
+    state.menuDishIds,
+    state.menuLedgerIds,
+  ]);
 
   const badge = uncheckedCount(shopping);
   const wantBadge = state.hearts.length;
@@ -256,10 +297,9 @@ export function Shell({ children }: { children: ReactNode }) {
     pathname === "/" ||
     pathname.startsWith("/c/") ||
     pathname.startsWith("/d/") ||
-    pathname.startsWith("/browse") ||
-    pathname.startsWith("/tonight");
+    pathname.startsWith("/browse");
   const listOn = pathname.startsWith("/list");
-  const usOn = pathname.startsWith("/us") || pathname.startsWith("/ledger");
+  const usOn = pathname.startsWith("/us");
 
   return (
     <div className="world">
@@ -312,7 +352,9 @@ export function Shell({ children }: { children: ReactNode }) {
         className={[
           "app-frame",
           modal ? "is-modal" : "",
-          sideMode === "collapsed" ? "side-pref-collapsed" : "side-pref-expanded",
+          sideMode === "collapsed"
+            ? "side-pref-collapsed"
+            : "side-pref-expanded",
           sideCollapsed ? "is-side-collapsed" : "",
         ]
           .filter(Boolean)
@@ -341,13 +383,18 @@ export function Shell({ children }: { children: ReactNode }) {
           {pullable && (
             <div
               className={pullReady ? "pull-hint is-ready" : "pull-hint"}
-              style={{ height: pullY > 0 ? pullY : 0, opacity: pullY > 12 ? 1 : pullY / 12 }}
+              style={{
+                height: pullY > 0 ? pullY : 0,
+                opacity: pullY > 12 ? 1 : pullY / 12,
+              }}
               aria-hidden={pullY <= 0}
             >
               <span>{pullReady ? "松开刷新" : "下拉刷新"}</span>
             </div>
           )}
+          <WeChatGuide />
           <div key={pathname} className="route-view">
+            <RecoveryNotice />
             <InstallHint />
             {children}
           </div>
@@ -370,13 +417,17 @@ export function Shell({ children }: { children: ReactNode }) {
             className="side-collapse-btn"
             aria-pressed={sideMode === "collapsed"}
             aria-label={sideMode === "collapsed" ? "展开侧栏" : "折叠侧栏"}
-            title={sideMode === "collapsed" ? "展开侧栏" : "折叠侧栏，腾出内容宽度"}
+            title={
+              sideMode === "collapsed" ? "展开侧栏" : "折叠侧栏，腾出内容宽度"
+            }
             onClick={toggleSide}
           >
             <span className="side-collapse-icon" aria-hidden="true">
               {sideMode === "collapsed" ? "»" : "«"}
             </span>
-            <span className="side-collapse-label">{sideMode === "collapsed" ? "展开" : "折叠"}</span>
+            <span className="side-collapse-label">
+              {sideMode === "collapsed" ? "展开" : "折叠"}
+            </span>
           </button>
           <div
             className="side-resize-handle"
@@ -387,13 +438,17 @@ export function Shell({ children }: { children: ReactNode }) {
             onPointerDown={(event) => {
               if (sideMode === "collapsed") return;
               event.preventDefault();
-              (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+              (event.currentTarget as HTMLElement).setPointerCapture?.(
+                event.pointerId,
+              );
               sideDrag.current = { startX: event.clientX, startW: sideWidth };
             }}
             onPointerMove={(event) => {
               const drag = sideDrag.current;
               if (!drag) return;
-              const next = clampSideWidth(drag.startW + (event.clientX - drag.startX));
+              const next = clampSideWidth(
+                drag.startW + (event.clientX - drag.startX),
+              );
               setSideWidth(next);
               applySideWidth(next);
             }}
@@ -402,11 +457,15 @@ export function Shell({ children }: { children: ReactNode }) {
               const drag = sideDrag.current;
               sideDrag.current = null;
               try {
-                (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+                (event.currentTarget as HTMLElement).releasePointerCapture?.(
+                  event.pointerId,
+                );
               } catch {
                 /* ignore */
               }
-              const next = clampSideWidth(drag.startW + (event.clientX - drag.startX));
+              const next = clampSideWidth(
+                drag.startW + (event.clientX - drag.startX),
+              );
               setSideWidth(next);
               applySideWidth(next);
               saveSideWidth(next);
@@ -432,17 +491,23 @@ export function Shell({ children }: { children: ReactNode }) {
             to="/"
             aria-current={menuOn ? "page" : undefined}
             data-nav="menu"
-            aria-label={tonightCount > 0 ? `菜单，今晚 ${tonightCount} 道` : "菜单"}
-            title={tonightCount > 0 ? `菜单 · 今晚 ${tonightCount} 道` : "菜单"}
+            aria-label="首页"
+            title="首页"
           >
             <NavCodexIcon name="home" fallback={<HomeIcon />} />
-            <span>菜单</span>
+            <span>首页</span>
+          </Link>
+          <Link
+            className={pathname.startsWith("/tonight") ? "tab on" : "tab"}
+            to="/tonight"
+            aria-current={pathname.startsWith("/tonight") ? "page" : undefined}
+            aria-label="今晚菜单"
+          >
+            <NavCodexIcon name="menu" fallback={<ListIcon />} />
+            <span>今晚</span>
             {tonightCount > 0 ? (
-              <em
-                className={tonightPop ? "badge tonight-badge is-pop" : "badge tonight-badge"}
-                title={`今晚 ${tonightCount} 道`}
-              >
-                {tonightCount > 99 ? "99+" : tonightCount}
+              <em className={tonightPop ? "badge is-pop" : "badge"}>
+                {tonightCount}
               </em>
             ) : null}
           </Link>
@@ -454,12 +519,21 @@ export function Shell({ children }: { children: ReactNode }) {
             title="清单"
           >
             <NavCodexIcon name="shop" fallback={<ListIcon />} />
-            <span>清单</span>
+            <span>采购</span>
             {badge > 0 && (
               <em className="badge shop-badge" title={`还有 ${badge} 项未勾选`}>
                 {badge > 99 ? "99+" : badge}
               </em>
             )}
+          </Link>
+          <Link
+            className={pathname.startsWith("/ledger") ? "tab on" : "tab"}
+            to="/ledger"
+            aria-current={pathname.startsWith("/ledger") ? "page" : undefined}
+            aria-label="我们的账本"
+          >
+            <NavCodexIcon name="ledger" fallback={<ListIcon />} />
+            <span>账本</span>
           </Link>
           <Link
             className={usOn ? "tab on" : "tab"}
@@ -470,18 +544,41 @@ export function Shell({ children }: { children: ReactNode }) {
           >
             <NavCodexIcon name="us" fallback={<PeopleIcon />} />
             <span>我们</span>
-            {wantBadge > 0 && (
+            {false && wantBadge > 0 && (
               <em className="badge want-badge" title={`想吃 ${wantBadge} 道`}>
                 {wantBadge > 99 ? "99+" : wantBadge}
               </em>
             )}
           </Link>
         </nav>
+        <Sheet
+          open={rollChoiceOpen}
+          title="今晚已经有菜单了"
+          onClose={closeRollChoice}
+          compact
+        >
+          <p>保留已选的菜补齐搭配，或换一桌新菜单。换桌后可撤销。</p>
+          <div className="row-btns wrap">
+            <button className="btn-primary" onClick={fillTonight}>
+              保留并补齐
+            </button>
+            <button className="btn-secondary" onClick={replaceTonight}>
+              替换整桌
+            </button>
+            <button className="btn-ghost" onClick={closeRollChoice}>
+              取消
+            </button>
+          </div>
+        </Sheet>
         <ThemeSheet />
         <OnboardSheet />
         <MealSheet />
         {rolling && (
-          <div className="dice-overlay is-reveal" role="status" aria-live="polite">
+          <div
+            className="dice-overlay is-reveal"
+            role="status"
+            aria-live="polite"
+          >
             <div className="reveal-card" aria-hidden="true">
               <div className="reveal-card-inner">
                 <Die pips={3} className="spin-a" />
@@ -494,10 +591,15 @@ export function Shell({ children }: { children: ReactNode }) {
             </p>
           </div>
         )}
-                <footer className="print-sheet-footer" aria-hidden="true">
+        <footer className="print-sheet-footer" aria-hidden="true">
           {`今天吃什么 · ${new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" })} · ${APP_VERSION}`}
         </footer>
-        <div className="toasts" aria-live="polite" aria-relevant="additions text" aria-atomic="false">
+        <div
+          className="toasts"
+          aria-live="polite"
+          aria-relevant="additions text"
+          aria-atomic="false"
+        >
           {toasts.map((item) => (
             <div
               key={item.id}
@@ -531,6 +633,7 @@ export function Shell({ children }: { children: ReactNode }) {
               .filter(Boolean)
               .join(" ")}
             aria-hidden={!showTop}
+            inert={!showTop}
           >
             <button
               type="button"

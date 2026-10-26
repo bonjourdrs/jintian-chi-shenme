@@ -1,152 +1,60 @@
-const CACHE = "jte-static-v105";
-/** Runtime dish-cover cache — survives SW version bumps; not in deploy quota. */
-const COVER_CACHE = "jte-covers-v1";
-const KEEP = new Set([CACHE, COVER_CACHE]);
-const PRECACHE = [
-  "./manifest.webmanifest",
-  "./favicon.svg",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-maskable.png",
-  "./apple-touch-icon.png",
-  "./assets/ui/app-icon.png",
-  /* Theme paper textures — avoid FOUC on switch / offline */
-  "./assets/themes/cafe-paper.png",
-  "./assets/themes/chalk-board.png",
-  "./assets/themes/market-wash.png",
-  "./assets/themes/midnight-paper.png",
-];
+// Build replaces these constants with the exact application shell and revision.
+const NAMESPACE = `jte-${encodeURIComponent(new URL(self.registration.scope).pathname)}-`;
+const CACHE = `${NAMESPACE}static-__BUILD_ID__`;
+const PRECACHE = [];
+const COVER_CACHE = `${NAMESPACE}covers-v2`;
+const COVER_LIMIT = 240;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
-  /* Do not skipWaiting here — page shows「有新版本 · 刷新」when waiting. */
 });
-
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
-
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => !KEEP.has(key)).map((key) => caches.delete(key))),
-    ),
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keep = new Set([CACHE, COVER_CACHE]);
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key.startsWith(NAMESPACE) && !keep.has(key)).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
-function isHtmlOrJs(url) {
-  const path = url.pathname;
-  if (path.endsWith(".js") || path.endsWith(".mjs")) return true;
-  if (path.endsWith(".html") || path.endsWith("/")) return true;
-  if (/\/assets\/.+\.js$/i.test(path)) return true;
-  return false;
-}
-
-function isDishCover(url) {
-  const path = url.pathname;
-  /* Real dish photos under assets/dishes/ (incl. web/ subfolder) — never Codex dish art. */
-  return /\/assets\/dishes\//i.test(path);
-}
-
-function isStaticIcon(url) {
-  const path = url.pathname;
-  return (
-    path.endsWith(".png") ||
-    path.endsWith(".svg") ||
-    path.endsWith(".jpg") ||
-    path.endsWith(".jpeg") ||
-    path.endsWith(".webp") ||
-    path.endsWith(".ico") ||
-    path.endsWith("manifest.webmanifest")
-  );
+async function coverResponse(request) {
+  const cache = await caches.open(COVER_CACHE);
+  const cached = await cache.match(request);
+  if (cached) {
+    try {
+      await cache.delete(request);
+      await cache.put(request, cached.clone());
+    } catch { /* Keep serving the cached copy if storage is full. */ }
+    return cached;
+  }
+  const response = await fetch(request);
+  if (response.ok) {
+    try {
+      await cache.put(request, response.clone());
+      const keys = await cache.keys();
+      await Promise.all(keys.slice(0, Math.max(0, keys.length - COVER_LIMIT)).map((key) => cache.delete(key)));
+    } catch { /* Return the network image even when cache quota is exhausted. */ }
+  }
+  return response;
 }
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
-
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put("./index.html", copy));
-          return response;
-        })
-        .catch(() => caches.match("./index.html")),
-    );
-    return;
-  }
-
-  if (url.pathname.endsWith("/sw.js") || url.pathname.endsWith("/manifest.webmanifest")) {
-    event.respondWith(fetch(request).catch(() => caches.match(request)));
-    return;
-  }
-
-  /* Dish covers: durable cache-first — avoid re-download when browsing offline. */
-  if (isDishCover(url)) {
-    event.respondWith(
-      caches.open(COVER_CACHE).then((cache) =>
-        cache.match(request).then((cached) => {
-          if (cached) return cached;
-          return fetch(request).then((response) => {
-            if (response.ok) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          });
-        }),
-      ),
-    );
-    return;
-  }
-
-  if (isHtmlOrJs(url)) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request)),
-    );
-    return;
-  }
-
-  if (isStaticIcon(url)) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        });
-      }),
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    }),
-  );
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  if (!url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  if (url.pathname.endsWith("/sw.js")) return;
+  event.respondWith((async () => {
+    if (/\/assets\/dishes\//i.test(url.pathname)) return coverResponse(request);
+    const cache = await caches.open(CACHE);
+    if (request.mode === "navigate") {
+      return (await cache.match(new URL("index.html", self.registration.scope).href)) || fetch(request);
+    }
+    // Module requests send Origin, while install-time precache requests may not.
+    // These are public build assets; Vite's Vary: Origin must not break offline matching.
+    return (await cache.match(request, { ignoreVary: true })) || fetch(request);
+  })());
 });

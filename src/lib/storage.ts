@@ -1,46 +1,13 @@
-import { dishById } from "../data/catalog.ts";
+import { isTheme, parseAppState } from "./stateSchema.ts";
 import { DEFAULT_HEMA_TEMPLATE } from "./hema.ts";
 import { sanitizeMeal } from "./meal.ts";
-import type { AppState, ExtraItem, LedgerEntry, ThemeId } from "../types.ts";
+import type { AppState } from "../types.ts";
 
-const STATE_KEY = "jte.v1";
+export const STATE_KEY = "jte.v1";
 export const THEME_KEY = "jte.theme";
 
-const THEMES: ThemeId[] = [
-  "cafe-journal",
-  "kitchen-chalkboard",
-  "watercolor-market",
-  "midnight-magazine",
-];
-
-function isTheme(value: unknown): value is ThemeId {
-  return typeof value === "string" && THEMES.includes(value as ThemeId);
-}
-
-function strings(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
-}
-
-function isLedger(value: unknown): value is LedgerEntry {
-  if (!value || typeof value !== "object") return false;
-  const entry = value as LedgerEntry;
-  return (
-    typeof entry.id === "string" &&
-    typeof entry.name === "string" &&
-    typeof entry.notes === "string" &&
-    typeof entry.ingredients === "string" &&
-    typeof entry.createdAt === "number" &&
-    typeof entry.updatedAt === "number" &&
-    (entry.image === undefined || typeof entry.image === "string")
-  );
-}
-
-function isExtra(value: unknown): value is ExtraItem {
-  if (!value || typeof value !== "object") return false;
-  const extra = value as ExtraItem;
-  return typeof extra.id === "string" && typeof extra.name === "string";
-}
+export const CORRUPT_STATE_KEY = "jte.recovery.corrupt.v1";
+let blockedWrite = false;
 
 export function emptyState(): AppState {
   return {
@@ -61,48 +28,55 @@ export function emptyState(): AppState {
 
 export function loadState(): AppState {
   const base = emptyState();
+  let raw: string | null = null;
   try {
-    const raw = localStorage.getItem(STATE_KEY);
+    raw = localStorage.getItem(STATE_KEY);
     if (!raw) {
       const themeOnly = localStorage.getItem(THEME_KEY);
       if (isTheme(themeOnly)) base.theme = themeOnly;
       return base;
     }
-    const parsed = JSON.parse(raw) as Partial<AppState>;
-    const ledger = Array.isArray(parsed.ledger) ? parsed.ledger.filter(isLedger) : [];
-    const ledgerIds = new Set(ledger.map((entry) => entry.id));
-    const theme = isTheme(parsed.theme) ? parsed.theme : base.theme;
-    return {
-      theme,
-      hearts: strings(parsed.hearts).filter((id) => dishById.has(id)),
-      menuDishIds: (() => {
-        const ids = strings(parsed.menuDishIds).filter((id) => dishById.has(id));
-        return ids;
-      })(),
-      menuPinnedIds: (() => {
-        const ids = strings(parsed.menuDishIds).filter((id) => dishById.has(id));
-        const idSet = new Set(ids);
-        return strings(parsed.menuPinnedIds).filter((id) => idSet.has(id) && dishById.has(id));
-      })(),
-      menuLedgerIds: strings(parsed.menuLedgerIds).filter((id) => ledgerIds.has(id)),
-      extras: Array.isArray(parsed.extras) ? parsed.extras.filter(isExtra) : [],
-      bought: strings(parsed.bought),
-      pantry: strings(parsed.pantry),
-      ledger,
-      meal: sanitizeMeal(parsed.meal),
-      tonightNote:
-        typeof parsed.tonightNote === "string" ? parsed.tonightNote.slice(0, 120) : "",
-      hemaTemplate:
-        typeof parsed.hemaTemplate === "string" && parsed.hemaTemplate.trim()
-          ? parsed.hemaTemplate
-          : DEFAULT_HEMA_TEMPLATE,
-    };
+    const parsed = parseAppState(JSON.parse(raw));
+    if (parsed) return parsed;
+    throw new Error("状态格式无效");
   } catch {
+    // Never overwrite damaged or temporarily inaccessible data without a recovery copy.
+    blockedWrite = true;
+    if (raw !== null) {
+      try {
+        localStorage.setItem(CORRUPT_STATE_KEY, raw);
+        blockedWrite = false;
+      } catch {
+        /* preserve the original key if quota/access prevents a recovery copy */
+      }
+    }
     return base;
   }
 }
 
-export function saveState(state: AppState): void {
-  localStorage.setItem(STATE_KEY, JSON.stringify(state));
-  localStorage.setItem(THEME_KEY, state.theme);
+export function saveState(state: AppState, replaceCorrupt = false): AppState {
+  if (blockedWrite && !replaceCorrupt)
+    throw new Error("原数据暂不可读，已暂停写入");
+  const valid = parseAppState(state);
+  if (!valid) throw new Error("状态格式无效，未写入");
+  if (valid.sync)
+    valid.sync.registers = Object.fromEntries(
+      Object.entries(valid.sync.registers).sort(([a], [b]) =>
+        a.localeCompare(b, "en"),
+      ),
+    );
+  const previous = localStorage.getItem(STATE_KEY),
+    theme = localStorage.getItem(THEME_KEY);
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(valid));
+    localStorage.setItem(THEME_KEY, valid.theme);
+  } catch (error) {
+    if (previous === null) localStorage.removeItem(STATE_KEY);
+    else localStorage.setItem(STATE_KEY, previous);
+    if (theme === null) localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, theme);
+    throw error;
+  }
+  blockedWrite = false;
+  return valid;
 }

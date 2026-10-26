@@ -1,3 +1,8 @@
+import { newId } from "../lib/id.ts";
+import {
+  ledgerIngredients,
+  ledgerServingsKey,
+} from "../lib/ledgerIngredients.ts";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { DishArt, EmptyArt } from "../components/Art.tsx";
@@ -27,7 +32,12 @@ import {
 } from "../lib/hema.ts";
 import { isOnline } from "../lib/online.ts";
 import { buildTonightShareText, shareOrCopy } from "../lib/share.ts";
-import { mealProgressParts, mealSummary, mealTotal, menuVsMealHint } from "../lib/meal.ts";
+import {
+  mealProgressParts,
+  mealSummary,
+  mealTotal,
+  menuVsMealHint,
+} from "../lib/meal.ts";
 import {
   mergeTonightIngredients,
   mergedShoppingPlainText,
@@ -46,7 +56,8 @@ export function TonightPage() {
     state,
     menuDishes,
     rollTonight,
-    rolling, rollCooling,
+    rolling,
+    rollCooling,
     openMeal,
     clearMenu,
     restoreMenu,
@@ -76,14 +87,22 @@ export function TonightPage() {
   const [reveal, setReveal] = useState(false);
   const [tonightMore, setTonightMore] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
-  const [unifiedServings, setUnifiedServings] = useState<number>(() => loadTonightUnifiedServings() ?? baseServings());
-  const [hasUnified, setHasUnified] = useState(() => loadTonightUnifiedServings() != null);
+  const [unifiedServings, setUnifiedServings] = useState<number>(
+    () => loadTonightUnifiedServings() ?? baseServings(),
+  );
+  const [hasUnified, setHasUnified] = useState(
+    () => loadTonightUnifiedServings() != null,
+  );
   const [servingsTick, setServingsTick] = useState(0);
 
   const [showMerged, setShowMerged] = useState(false);
-  const [drag, setDrag] = useState<{ kind: DragKind; index: number } | null>(null);
+  const [drag, setDrag] = useState<{ kind: DragKind; index: number } | null>(
+    null,
+  );
   const [rejectTick, setRejectTick] = useState(0);
-  const [over, setOver] = useState<{ kind: DragKind; index: number } | null>(null);
+  const [over, setOver] = useState<{ kind: DragKind; index: number } | null>(
+    null,
+  );
   const wasRolling = useRef(false);
 
   const rejectCount = useMemo(() => {
@@ -119,7 +138,9 @@ export function TonightPage() {
   /* After roll overlay ends, play a short card reveal on the list (blur→clear). */
   useEffect(() => {
     if (wasRolling.current && !rolling && !empty) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
       if (!reduce) {
         setReveal(true);
         const id = window.setTimeout(() => setReveal(false), 680);
@@ -134,7 +155,11 @@ export function TonightPage() {
   const tonightIngredientItems = () => {
     const fromDishes = menuDishes.map((dish) => {
       const recipe = recipeFor(dish);
-      if (recipe.unparsed) return { name: dish.name, ingredients: [] as typeof recipe.ingredients };
+      if (recipe.unparsed)
+        return {
+          name: dish.name,
+          ingredients: [] as typeof recipe.ingredients,
+        };
       const servings = loadServingsForDish(dish.id);
       const ingredients = recipe.ingredients.map((ing) => ({
         ...ing,
@@ -143,27 +168,27 @@ export function TonightPage() {
       return { name: dish.name, ingredients };
     });
     const fromLedger = ledgerEntries.map((entry) => {
-      const names = entry.ingredients
-        .split(/\n|,|，/)
-        .map((part) => part.trim())
-        .filter(Boolean);
-      return {
-        name: entry.name,
-        ingredients: names.map((name) => ({ name, role: "main" as const, uncertain: false })),
-      };
+      return { name: entry.name, ingredients: ledgerIngredients(entry) };
     });
     return [...fromDishes, ...fromLedger];
   };
 
   const servingsScaled = useMemo(
-    () => menuDishes.some((dish) => loadServingsForDish(dish.id) !== baseServings()),
+    () =>
+      menuDishes.some(
+        (dish) => loadServingsForDish(dish.id) !== baseServings(),
+      ),
     [menuDishes, servingsTick],
   );
 
   const mergedLines = useMemo(() => {
     const fromDishes = menuDishes.map((dish) => {
       const recipe = recipeFor(dish);
-      if (recipe.unparsed) return { name: dish.name, ingredients: [] as typeof recipe.ingredients };
+      if (recipe.unparsed)
+        return {
+          name: dish.name,
+          ingredients: [] as typeof recipe.ingredients,
+        };
       const servings = loadServingsForDish(dish.id);
       const ingredients = recipe.ingredients.map((ing) => ({
         ...ing,
@@ -172,16 +197,13 @@ export function TonightPage() {
       return { name: dish.name, ingredients };
     });
     const fromLedger = ledgerEntries.map((entry) => {
-      const names = entry.ingredients
-        .split(/\n|,|，/)
-        .map((part) => part.trim())
-        .filter(Boolean);
-      return {
-        name: entry.name,
-        ingredients: names.map((name) => ({ name, role: "main" as const, uncertain: false })),
-      };
+      return { name: entry.name, ingredients: ledgerIngredients(entry) };
     });
-    return mergeTonightIngredients([...fromDishes, ...fromLedger].filter((item) => item.ingredients.length > 0));
+    return mergeTonightIngredients(
+      [...fromDishes, ...fromLedger].filter(
+        (item) => item.ingredients.length > 0,
+      ),
+    );
   }, [menuDishes, ledgerEntries, servingsTick]);
 
   const copyMergedList = async () => {
@@ -191,12 +213,15 @@ export function TonightPage() {
     }
     const body = mergedShoppingPlainText(mergedLines);
     const hema = hemaSearchAppendix(mergedLines.map((line) => line.name));
-    const ok = await copyText(hema ? `${body}
+    const ok = await copyText(
+      hema
+        ? `${body}
 
-${hema}` : body);
+${hema}`
+        : body,
+    );
     toast(ok ? "已复制（含盒马可搜关键词）" : "没能复制，请手动选择");
   };
-
 
   const recordTonightToLedger = () => {
     if (!oncePrimary("tonight-ledger")) return;
@@ -233,7 +258,7 @@ ${hema}` : body);
     const unique = [...new Set(ingredientLines)];
     const now = Date.now();
     saveLedger({
-      id: crypto.randomUUID(),
+      id: newId(),
       name,
       notes: `今晚菜单 · ${dateLabel}\n${names.map((n, i) => `${i + 1}. ${n}`).join("\n")}`,
       ingredients: unique.join("\n"),
@@ -259,24 +284,41 @@ ${hema}` : body);
       "",
       "【菜名】",
       ...menuDishes.map((dish, i) => `${i + 1}. ${dish.name}`),
-      ...ledgerEntries.map((entry, i) => `${menuDishes.length + i + 1}. ${entry.name}（账本）`),
+      ...ledgerEntries.map(
+        (entry, i) => `${menuDishes.length + i + 1}. ${entry.name}（账本）`,
+      ),
     ];
-    const items = tonightIngredientItems().filter((item) => item.ingredients.length > 0);
+    const items = tonightIngredientItems().filter(
+      (item) => item.ingredients.length > 0,
+    );
     if (items.length > 0) {
       lines.push("", "【按菜食材】", menuIngredientsPlainText(items));
     }
     if (mergedLines.length > 0) {
-      lines.push("", "【合并采购 · 可选】", mergedShoppingPlainText(mergedLines));
+      lines.push(
+        "",
+        "【合并采购 · 可选】",
+        mergedShoppingPlainText(mergedLines),
+      );
     }
     const hema = hemaSearchAppendix(mergedLines.map((line) => line.name));
     if (hema) lines.push("", hema);
-    lines.push("", "— 来自「今天吃什么」· https://jintian-chi-shenme.deed.page/ · 盒马请自行搜索，不是一键加购 —");
+    lines.push(
+      "",
+      "— 来自「今天吃什么」· https://jintian-chi-shenme.deed.page/ · 盒马请自行搜索，不是一键加购 —",
+    );
     const ok = await copyText(lines.join("\n"));
-    toast(ok ? "菜单已导出（含搭配、采购摘要与盒马可搜关键词）" : "没能复制，请手动选择");
+    toast(
+      ok
+        ? "菜单已导出（含搭配、采购摘要与盒马可搜关键词）"
+        : "没能复制，请手动选择",
+    );
   };
 
   const copyTonightIngredients = async () => {
-    const items = tonightIngredientItems().filter((item) => item.ingredients.length > 0);
+    const items = tonightIngredientItems().filter(
+      (item) => item.ingredients.length > 0,
+    );
     if (items.length === 0) {
       toast("还没有可复制的食材");
       return;
@@ -290,7 +332,9 @@ ${hema}` : body);
       toast("还没有可分享的菜单");
       return;
     }
-    const items = tonightIngredientItems().filter((item) => item.ingredients.length > 0);
+    const items = tonightIngredientItems().filter(
+      (item) => item.ingredients.length > 0,
+    );
     const ingredientLines: string[] = [];
     for (const item of items) {
       for (const ing of item.ingredients) {
@@ -311,13 +355,22 @@ ${hema}` : body);
   };
 
   const shareTonightIngredients = async () => {
-    const items = tonightIngredientItems().filter((item) => item.ingredients.length > 0);
+    const items = tonightIngredientItems().filter(
+      (item) => item.ingredients.length > 0,
+    );
     if (items.length === 0) {
       toast("还没有可分享的食材");
       return;
     }
     const text = menuIngredientsPlainText(items);
-    await shareOrCopy({ title: "今晚食材清单 · 今天吃什么", text: `${text}\n\n打开「今天吃什么」一起看看吧`, url: "https://jintian-chi-shenme.deed.page/" }, toast);
+    await shareOrCopy(
+      {
+        title: "今晚食材清单 · 今天吃什么",
+        text: `${text}\n\n打开「今天吃什么」一起看看吧`,
+        url: "https://jintian-chi-shenme.deed.page/",
+      },
+      toast,
+    );
   };
 
   const onDragStart = (kind: DragKind, index: number) => (event: DragEvent) => {
@@ -334,7 +387,8 @@ ${hema}` : body);
     if (!drag || drag.kind !== kind) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
-    if (!over || over.kind !== kind || over.index !== index) setOver({ kind, index });
+    if (!over || over.kind !== kind || over.index !== index)
+      setOver({ kind, index });
   };
 
   const onDrop = (kind: DragKind, index: number) => (event: DragEvent) => {
@@ -360,12 +414,22 @@ ${hema}` : body);
     const parts = ["menu-row"];
     /* pin class added per-row below when kind===dish */
     if (drag?.kind === kind && drag.index === index) parts.push("is-dragging");
-    if (over?.kind === kind && over.index === index && drag && drag.index !== index) parts.push("is-drop-target");
+    if (
+      over?.kind === kind &&
+      over.index === index &&
+      drag &&
+      drag.index !== index
+    )
+      parts.push("is-drop-target");
     return parts.join(" ");
   };
 
   return (
-    <div className={reveal ? "page tonight-page is-menu-reveal" : "page tonight-page"}>
+    <div
+      className={
+        reveal ? "page tonight-page is-menu-reveal" : "page tonight-page"
+      }
+    >
       {clearConfirm ? (
         <div
           className="clear-confirm-scrim"
@@ -379,7 +443,9 @@ ${hema}` : body);
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="clear-tonight-title">清空今晚菜单？</h2>
-            <p className="hint">菜会从今晚拿掉；几菜几汤搭配还在。按 Esc 取消。</p>
+            <p className="hint">
+              菜会从今晚拿掉；几菜几汤搭配还在。按 Esc 取消。
+            </p>
             <div className="row-btns wrap">
               <button
                 type="button"
@@ -400,7 +466,12 @@ ${hema}` : body);
                   toast("今晚菜单已清空", {
                     ms: 7000,
                     undo: () => {
-                      const ok = restoreMenu(dishIds, ledgerIds, note, undoToken);
+                      const ok = restoreMenu(
+                        dishIds,
+                        ledgerIds,
+                        note,
+                        undoToken,
+                      );
                       toast(ok ? "已恢复今晚菜单与备忘" : "撤销已失效");
                     },
                   });
@@ -433,11 +504,16 @@ ${hema}` : body);
             <span className="tonight-meal-k">搭配</span>
             <strong>{mealSummary(state.meal)}</strong>
             <em>
-              {mealTotal(state.meal)} 道目标 · 今晚 {menuDishes.length + ledgerEntries.length} 道
+              {mealTotal(state.meal)} 道目标 · 今晚{" "}
+              {menuDishes.length + ledgerEntries.length} 道
             </em>
           </button>
           {(() => {
-            const parts = mealProgressParts(menuDishes, state.meal, ledgerEntries.length);
+            const parts = mealProgressParts(
+              menuDishes,
+              state.meal,
+              ledgerEntries.length,
+            );
             if (parts.length === 0) return null;
             return (
               <button
@@ -465,8 +541,13 @@ ${hema}` : body);
             );
           })()}
           {(() => {
-            const hint = menuVsMealHint(menuDishes.length + ledgerEntries.length, state.meal);
-            return hint ? <p className="hint tonight-meal-hint">{hint}</p> : null;
+            const hint = menuVsMealHint(
+              menuDishes.length + ledgerEntries.length,
+              state.meal,
+            );
+            return hint ? (
+              <p className="hint tonight-meal-hint">{hint}</p>
+            ) : null;
           })()}
         </div>
 
@@ -491,7 +572,11 @@ ${hema}` : body);
         ) : null}
 
         {!empty && menuDishes.length > 0 ? (
-          <div className="tonight-unified-servings" role="group" aria-label="统一份数">
+          <div
+            className="tonight-unified-servings"
+            role="group"
+            aria-label="统一份数"
+          >
             <div className="tonight-unified-head">
               <strong>统一份数</strong>
               <span className="hint">
@@ -525,8 +610,22 @@ ${hema}` : body);
                 type="button"
                 className="btn-secondary compact"
                 onClick={() => {
-                  const ids = menuDishes.map((d) => d.id);
-                  const n = applyTonightUnifiedServings(ids, unifiedServings);
+                  const ids = [
+                    ...menuDishes.map((d) => d.id),
+                    ...ledgerEntries.map((entry) =>
+                      ledgerServingsKey(entry.id),
+                    ),
+                  ];
+                  const n = applyTonightUnifiedServings(
+                    ids,
+                    unifiedServings,
+                    Object.fromEntries(
+                      ledgerEntries.map((entry) => [
+                        ledgerServingsKey(entry.id),
+                        entry.baseServings ?? 2,
+                      ]),
+                    ),
+                  );
                   setUnifiedServings(n);
                   setHasUnified(true);
                   setServingsTick((x) => x + 1);
@@ -541,12 +640,19 @@ ${hema}` : body);
                   type="button"
                   className="btn-ghost compact"
                   onClick={() => {
-                    const ids = menuDishes.map((d) => d.id);
+                    const ids = [
+                      ...menuDishes.map((d) => d.id),
+                      ...ledgerEntries.map((entry) =>
+                        ledgerServingsKey(entry.id),
+                      ),
+                    ];
                     const n = clearTonightUnifiedServings(ids);
                     setHasUnified(false);
                     setUnifiedServings(baseServings());
                     setServingsTick((x) => x + 1);
-                    toast(n > 0 ? "已恢复各菜自己的份数" : "没有可恢复的份数快照");
+                    toast(
+                      n > 0 ? "已恢复各菜自己的份数" : "没有可恢复的份数快照",
+                    );
                     hapticTap();
                   }}
                 >
@@ -556,11 +662,19 @@ ${hema}` : body);
             </div>
             {hasUnified ? (
               <p className="hint tonight-unified-on" role="status">
-                当前统一 {loadTonightUnifiedServings() ?? unifiedServings} 人 · 点「清除恢复」回到应用前各菜份数
+                当前统一 {loadTonightUnifiedServings() ?? unifiedServings} 人 ·
+                点「清除恢复」回到应用前各菜份数
               </p>
             ) : null}
-            <p className="print-servings print-tonight-unified" aria-hidden="true">
-              今晚统一按 {hasUnified ? (loadTonightUnifiedServings() ?? unifiedServings) : "各菜自有"} 人份
+            <p
+              className="print-servings print-tonight-unified"
+              aria-hidden="true"
+            >
+              今晚统一按{" "}
+              {hasUnified
+                ? (loadTonightUnifiedServings() ?? unifiedServings)
+                : "各菜自有"}{" "}
+              人份
             </p>
           </div>
         ) : null}
@@ -572,7 +686,20 @@ ${hema}` : body);
           <strong>今晚还空着</strong>
           <p>先摇一桌，或在下面搜一道加进来。</p>
           <div className="empty-actions tonight-empty-actions">
-            <button type="button" className={rolling || rollCooling ? "btn-primary is-roll-cooling" : "btn-primary"} onClick={() => { if (!oncePrimary("roll")) return; rollTonight(); }} disabled={rolling || rollCooling} title={rollCooling ? "稍等一下再摇" : undefined}>
+            <button
+              type="button"
+              className={
+                rolling || rollCooling
+                  ? "btn-primary is-roll-cooling"
+                  : "btn-primary"
+              }
+              onClick={() => {
+                if (!oncePrimary("roll")) return;
+                rollTonight();
+              }}
+              disabled={rolling || rollCooling}
+              title={rollCooling ? "稍等一下再摇" : undefined}
+            >
               随机一顿
             </button>
             <button type="button" className="btn-ghost" onClick={openMeal}>
@@ -628,7 +755,9 @@ ${hema}` : body);
                     }}
                   >
                     <span className="drag-grip" aria-hidden="true">
-                      <i /><i /><i />
+                      <i />
+                      <i />
+                      <i />
                     </span>
                   </button>
                   <Link
@@ -642,7 +771,8 @@ ${hema}` : body);
                     <span className="menu-row-copy">
                       <h3 title={dish.name}>{dish.name}</h3>
                       <p>
-                        {dish.category} · {recipe.minutes} 分钟 · {recipe.tags[0]}
+                        {dish.category} · {recipe.minutes} 分钟 ·{" "}
+                        {recipe.tags[0]}
                       </p>
                     </span>
                   </Link>
@@ -659,15 +789,28 @@ ${hema}` : body);
                           ? `取消置顶「${dish.name}」`
                           : `置顶「${dish.name}」`
                       }
-                      aria-pressed={(state.menuPinnedIds || []).includes(dish.id)}
-                      title={(state.menuPinnedIds || []).includes(dish.id) ? "取消置顶" : "置顶"}
+                      aria-pressed={(state.menuPinnedIds || []).includes(
+                        dish.id,
+                      )}
+                      title={
+                        (state.menuPinnedIds || []).includes(dish.id)
+                          ? "取消置顶"
+                          : "置顶"
+                      }
                       onClick={() => {
-                        const was = (state.menuPinnedIds || []).includes(dish.id);
+                        const was = (state.menuPinnedIds || []).includes(
+                          dish.id,
+                        );
                         toggleMenuDishPin(dish.id);
                         hapticTap();
-                        toast(was ? `已取消置顶「${dish.name}」` : `已置顶「${dish.name}」`, {
-                          ms: 2200,
-                        });
+                        toast(
+                          was
+                            ? `已取消置顶「${dish.name}」`
+                            : `已置顶「${dish.name}」`,
+                          {
+                            ms: 2200,
+                          },
+                        );
                       }}
                     >
                       <span aria-hidden="true">📌</span>
@@ -712,7 +855,11 @@ ${hema}` : body);
                         toast(`已移出「${dish.name}」`, {
                           ms: 7000,
                           undo: () => {
-                            const ok = insertDishAtMenu(dish.id, snap.index, snap.undoToken);
+                            const ok = insertDishAtMenu(
+                              dish.id,
+                              snap.index,
+                              snap.undoToken,
+                            );
                             toast(ok ? `已恢复「${dish.name}」` : "撤销已失效");
                           },
                         });
@@ -760,7 +907,9 @@ ${hema}` : body);
                   }}
                 >
                   <span className="drag-grip" aria-hidden="true">
-                    <i /><i /><i />
+                    <i />
+                    <i />
+                    <i />
                   </span>
                 </button>
                 <Link to={`/ledger/${entry.id}`}>
@@ -768,7 +917,10 @@ ${hema}` : body);
                     {entry.image ? (
                       <img src={entry.image} alt="" />
                     ) : (
-                      <DishArt name={entry.name.trim() || "家常菜"} category="家常热菜" />
+                      <DishArt
+                        name={entry.name.trim() || "家常菜"}
+                        category="家常热菜"
+                      />
                     )}
                   </span>
                   <span className="menu-row-copy">
@@ -816,7 +968,11 @@ ${hema}` : body);
                       toast(`已移出「${entry.name}」`, {
                         ms: 7000,
                         undo: () => {
-                          const ok = insertLedgerAtMenu(entry.id, snap.index, snap.undoToken);
+                          const ok = insertLedgerAtMenu(
+                            entry.id,
+                            snap.index,
+                            snap.undoToken,
+                          );
                           toast(ok ? `已恢复「${entry.name}」` : "撤销已失效");
                         },
                       });
@@ -829,11 +985,18 @@ ${hema}` : body);
             ))}
           </ul>
           <p className="hint reorder-hint" id="tonight-reorder-hint">
-            <span className="reorder-hint-mark" aria-hidden="true">⋮⋮</span>
-            按住左侧手柄拖动，或点右侧上移 / 下移（键盘 ↑↓）；顺序会写入今晚菜单并跟情侣同步。几菜几汤搭配不受影响。
+            <span className="reorder-hint-mark" aria-hidden="true">
+              ⋮⋮
+            </span>
+            按住左侧手柄拖动，或点右侧上移 / 下移（键盘
+            ↑↓）；顺序会写入今晚菜单并跟情侣同步。几菜几汤搭配不受影响。
           </p>
           <div className="stack">
-            <Link className="btn-primary block" to="/list" title="打开采购清单；盒马按钮仅搜索，不是一键加购">
+            <Link
+              className="btn-primary block"
+              to="/list"
+              title="打开采购清单；盒马按钮仅搜索，不是一键加购"
+            >
               去买菜
             </Link>
             <div className="tonight-secondary-row">
@@ -844,7 +1007,10 @@ ${hema}` : body);
                     ? "btn-secondary btn-reroll is-roll-cooling"
                     : "btn-secondary btn-reroll"
                 }
-                onClick={() => { if (!oncePrimary("roll")) return; rollTonight(); }}
+                onClick={() => {
+                  if (!oncePrimary("roll")) return;
+                  rollTonight();
+                }}
                 disabled={rolling || rollCooling}
                 title={rollCooling ? "稍等一下再摇" : undefined}
               >
@@ -898,7 +1064,10 @@ ${hema}` : body);
               <button
                 type="button"
                 className="btn-secondary btn-export-tonight"
-                onClick={() => { if (!oncePrimary("export-menu")) return; void exportMenu(); }}
+                onClick={() => {
+                  if (!oncePrimary("export-menu")) return;
+                  void exportMenu();
+                }}
                 title="复制：搭配 + 备忘 + 菜名 + 食材 + 合并采购摘要"
               >
                 导出菜单
@@ -924,10 +1093,19 @@ ${hema}` : body);
               </button>
             </div>
             <p className="hint reroll-hint">
-              不满意就再摇——仍偏向「精修」。「不要这些」会短期临时排除本批（约 30 分钟，有上限），再摇时避开；可一键清除临时排除（不影响「避开已选 / 最近」）。
-              {rejectCount > 0 ? `当前${rollRejectHint() || ("临时排除 " + rejectCount + " 道")}。` : ""}
-              {rollExclude ? "已叠加避开今晚已有与最近看过的菜；不够会放宽。" : "当前未开「避开已选 / 最近」。"}
-              {rollLedgerExclude ? `已避开账本近 ${rollLedgerDays} 天做过的菜。` : ""}
+              不满意就再摇——仍偏向「精修」。「不要这些」会短期临时排除本批（约
+              30
+              分钟，有上限），再摇时避开；可一键清除临时排除（不影响「避开已选 /
+              最近」）。
+              {rejectCount > 0
+                ? `当前${rollRejectHint() || "临时排除 " + rejectCount + " 道"}。`
+                : ""}
+              {rollExclude
+                ? "已叠加避开今晚已有与最近看过的菜；不够会放宽。"
+                : "当前未开「避开已选 / 最近」。"}
+              {rollLedgerExclude
+                ? `已避开账本近 ${rollLedgerDays} 天做过的菜。`
+                : ""}
             </p>
             <label className="roll-exclude-toggle is-inline">
               <input
@@ -946,7 +1124,11 @@ ${hema}` : body);
               <span>避开账本近几天</span>
             </label>
             {rollLedgerExclude ? (
-              <div className="roll-ledger-days is-inline" role="group" aria-label="避开账本天数">
+              <div
+                className="roll-ledger-days is-inline"
+                role="group"
+                aria-label="避开账本天数"
+              >
                 {([3, 7, 14] as const).map((d) => (
                   <button
                     key={d}
@@ -978,7 +1160,11 @@ ${hema}` : body);
               <div className="more-menu tonight-more">
                 <button
                   type="button"
-                  className={tonightMore ? "btn-ghost more-toggle is-on" : "btn-ghost more-toggle"}
+                  className={
+                    tonightMore
+                      ? "btn-ghost more-toggle is-on"
+                      : "btn-ghost more-toggle"
+                  }
                   aria-expanded={tonightMore}
                   aria-haspopup="menu"
                   onClick={() => setTonightMore((v) => !v)}
@@ -1041,7 +1227,11 @@ ${hema}` : body);
                   <h2 className="block-title" style={{ margin: 0 }}>
                     合并购物清单
                   </h2>
-                  <button type="button" className="btn-ghost compact" onClick={() => void copyMergedList()}>
+                  <button
+                    type="button"
+                    className="btn-ghost compact"
+                    onClick={() => void copyMergedList()}
+                  >
                     一键复制
                   </button>
                 </div>
@@ -1057,18 +1247,28 @@ ${hema}` : body);
                       {mergedLines.map((line) => (
                         <li
                           key={`${line.role}-${line.name}`}
-                          className={line.role === "seasoning" ? "is-seasoning" : undefined}
+                          className={
+                            line.role === "seasoning"
+                              ? "is-seasoning"
+                              : undefined
+                          }
                         >
                           <span className="merged-name">{line.name}</span>
-                          <span className="merged-amt">{line.amount || "—"}</span>
+                          <span className="merged-amt">
+                            {line.amount || "—"}
+                          </span>
                           {line.merged && line.sources.length > 1 ? (
-                            <span className="merged-src">{line.sources.join(" · ")}</span>
+                            <span className="merged-src">
+                              {line.sources.join(" · ")}
+                            </span>
                           ) : null}
                           <button
                             type="button"
                             className="hema-btn compact merged-hema"
                             title={`在盒马搜「${hemaSearchTerm(line.name) || line.name}」· 不是一键加购`}
-                            onClick={() => openHema(line.name, state.hemaTemplate, toast)}
+                            onClick={() =>
+                              openHema(line.name, state.hemaTemplate, toast)
+                            }
                           >
                             <span className="hema-btn-main">盒马搜</span>
                             <span className="hema-btn-q">
@@ -1078,11 +1278,17 @@ ${hema}` : body);
                         </li>
                       ))}
                     </ul>
-                    <div className="hema-keyword-preview" aria-label="盒马关键词预览">
+                    <div
+                      className="hema-keyword-preview"
+                      aria-label="盒马关键词预览"
+                    >
                       {hemaKeywords(mergedLines.map((line) => line.name))
                         .slice(0, 10)
                         .map((term) => (
-                          <span key={term} className="chip hema-kw-chip is-static">
+                          <span
+                            key={term}
+                            className="chip hema-kw-chip is-static"
+                          >
                             {term}
                           </span>
                         ))}
@@ -1092,7 +1298,9 @@ ${hema}` : body);
                         type="button"
                         className="btn-secondary"
                         onClick={() => {
-                          const terms = hemaKeywords(mergedLines.map((line) => line.name));
+                          const terms = hemaKeywords(
+                            mergedLines.map((line) => line.name),
+                          );
                           if (terms.length === 0) {
                             toast("没有可搜的食材");
                             return;
@@ -1145,13 +1353,20 @@ ${hema}` : body);
             aria-label="搜索并加入今晚"
           />
           {pickQuery.length > 0 ? (
-            <button type="button" className="clear-btn is-visible" onClick={() => setPickQuery("")} aria-label="清除搜索">
+            <button
+              type="button"
+              className="clear-btn is-visible"
+              onClick={() => setPickQuery("")}
+              aria-label="清除搜索"
+            >
               ×
             </button>
           ) : null}
         </label>
         {pickNeedle && pickHits.length === 0 && (
-          <p className="hint">菜单里暂时没有「{pickNeedle}」。换个词，或去账本手写一道专属的。</p>
+          <p className="hint">
+            菜单里暂时没有「{pickNeedle}」。换个词，或去账本手写一道专属的。
+          </p>
         )}
         {pickHits.length > 0 && (
           <ul className="pick-list">

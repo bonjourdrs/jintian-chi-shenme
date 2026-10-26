@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { catIcon, dishArt, emptyAsset, kindArt, navAsset, uiAsset, type EmptyKind, type NavAssetName } from "../lib/assets.ts";
+import { catIcon, dishArt, kindArt, uiAsset, type EmptyKind, type NavAssetName } from "../lib/assets.ts";
 import { noteCoverFail, quietCoverRetryLabels } from "../lib/coverFail.ts";
 import { hashString, mulberry32 } from "../lib/random.ts";
 import { dishKind, dishTones, type Motif } from "../lib/visual.ts";
@@ -507,64 +507,13 @@ export function CatLine({ motif }: { motif: Motif }) {
   );
 }
 
-function CoupleMarkSvg() {
-  return (
-    <>
-      <svg className="couple-cute" viewBox="0 0 68 36">
-        <circle cx="20" cy="14" r="7" fill="#f3d2bf" />
-        <path d="M13 13c1-7 13-8 14-1" fill="#3a2618" />
-        <circle cx="17.5" cy="14" r="0.7" fill="#3a2618" />
-        <circle cx="22.5" cy="14" r="0.7" fill="#3a2618" />
-        <path d="M18 17.2q2 1.6 4 0" fill="none" stroke="#c47a6a" strokeWidth="0.8" />
-        <circle cx="42" cy="14" r="7" fill="#f6d8c4" />
-        <path d="M35 13c1-8 14-7 14 0" fill="#5c3828" />
-        <circle cx="39.5" cy="14" r="0.7" fill="#3a2618" />
-        <circle cx="44.5" cy="14" r="0.7" fill="#3a2618" />
-        <path d="M40 17.2q2 1.6 4 0" fill="none" stroke="#c47a6a" strokeWidth="0.8" />
-        <path d="M12 28c6-6 14-6 20-2 4-4 12-4 18 2" fill="none" stroke="#3a2618" strokeWidth="1.2" />
-        <path d="M54 10c2 2 2 4 0 6-2-2-2-4 0-6z" fill="#e25b45" />
-      </svg>
-      <svg className="couple-line" viewBox="0 0 68 36">
-        <circle cx="18" cy="13" r="6" fill="none" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M12 28c2-6 10-6 12 0" fill="none" stroke="currentColor" strokeWidth="1.4" />
-        <circle cx="40" cy="13" r="6" fill="none" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M34 28c2-6 10-6 12 0" fill="none" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M54 8l1.2 3.2H59l-2.6 2 1 3.2L54 14.6 50.6 16.4l1-3.2-2.6-2h3.6z" fill="currentColor" />
-      </svg>
-    </>
-  );
-}
-
 export function CoupleMark() {
-  return (
-    <span className="couple" aria-hidden="true">
-      <AssetOrFallback
-        src={uiAsset("couple")}
-        imgClassName="couple-asset"
-        fallback={<CoupleMarkSvg />}
-      />
-    </span>
-  );
+  return <span className="couple" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/v106/dinner-couple.png`} className="couple-asset" alt="" /></span>;
 }
 
 export function BasketArt() {
-  return (
-    <AssetOrFallback
-      src={uiAsset("basket")}
-      imgClassName="basket basket-asset"
-      fallback={
-        <svg className="basket" viewBox="0 0 48 36" aria-hidden="true">
-      <path d="M8 16h32l-3 14H11z" className="basket-body" />
-      <path d="M6 16h36" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M18 16c0-6 12-6 12 0" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="18" cy="12" r="4" className="tone tone-red" />
-      <ellipse cx="30" cy="11" rx="6" ry="3" className="tone tone-green" />
-    </svg>
-      }
-    />
-  );
+  return <StateArt index={1} className="basket basket-asset" />;
 }
-
 
 
 /** Soft LQIP reveal for arbitrary cover URLs (ledger own photos, etc.). */
@@ -580,43 +529,23 @@ export function FadeCover({ src, className }: { src: string; className?: string 
 }
 
 /** Codex empty-state art; falls back to empty-plate (also Codex), never CSS geometry. */
+function StateArt({ index, className = "" }: { index: number; className?: string }) {
+  return <span className={`state-illustration ${className}`} aria-hidden="true" style={{
+    backgroundImage: `url("${import.meta.env.BASE_URL}assets/v106/state-illustrations.png")`,
+    backgroundPosition: `${(index % 3) * 50}% ${index < 3 ? 0 : 100}%`,
+  }} />;
+}
+
 export function EmptyArt({ kind = "default", className }: { kind?: EmptyKind; className?: string }) {
-  return (
-    <span className={className ?? "empty-art"} aria-hidden="true">
-      <AssetOrFallback
-        src={emptyAsset(kind)}
-        imgClassName="empty-art-img"
-        skeleton
-        fallback={
-          <AssetOrFallback
-            src={uiAsset("empty-plate")}
-            imgClassName="empty-art-img"
-            /* no nested skeleton — avoids double LQIP fade */
-            fallback={<span className="empty-art-gap" />}
-          />
-        }
-      />
-    </span>
-  );
+  const positions = { tonight: 0, default: 0, ledger: 2, search: 3, want: 4 };
+  return <StateArt index={positions[kind]} className={className ?? "empty-art"} />;
 }
 
 /** Codex nav mark; SVG stroke only on image error. */
-export function NavCodexIcon({
-  name,
-  fallback,
-  className,
-}: {
-  name: NavAssetName;
-  fallback: ReactNode;
-  className?: string;
-}) {
-  return (
-    <AssetOrFallback
-      src={navAsset(name)}
-      imgClassName={className ?? "icon nav-codex"}
-      fallback={fallback}
-    />
-  );
+export function NavCodexIcon({ name, className }: { name: NavAssetName; fallback: ReactNode; className?: string }) {
+  if (name === "us") return <img src={`${import.meta.env.BASE_URL}assets/v106/dinner-couple.png`} className={className ?? "icon nav-codex"} alt="" aria-hidden="true" />;
+  const positions = { home: 4, menu: 0, shop: 1, ledger: 2 };
+  return <StateArt index={positions[name]} className={className ?? "icon nav-codex"} />;
 }
 
 /** Desktop ornament / splash brand mark from Codex batch4. */
@@ -641,18 +570,9 @@ export function SplashMark({ className }: { className?: string }) {
 }
 
 
-const ONBOARD_ART = ["onboard-theme", "onboard-find", "onboard-couple"] as const;
-
 export function OnboardStepArt({ step }: { step: number }) {
-  const name = ONBOARD_ART[Math.min(Math.max(step, 0), ONBOARD_ART.length - 1)] ?? "onboard-theme";
-  return (
-    <span className="onboard-art" aria-hidden="true">
-      <AssetOrFallback
-        src={uiAsset(name)}
-        imgClassName="onboard-art-img"
-        skeleton
-        fallback={<span className="onboard-art-gap" />}
-      />
-    </span>
-  );
+  return <span className="onboard-art" aria-hidden="true">{step === 2 ?
+    <img src={`${import.meta.env.BASE_URL}assets/v106/dinner-couple.png`} className="onboard-art-img" alt="" /> :
+    <StateArt index={step === 0 ? 5 : 3} className="onboard-art-img" />
+  }</span>;
 }
