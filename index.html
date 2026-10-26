@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4ecdf" />
+    <meta name="description" content="两个人的手绘晚饭账本：翻菜单、随机开饭、列采购清单。" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="今天吃什么" />
+    <title>今天吃什么</title>
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%assets/ui/app-icon.png" />
+    <link rel="icon" type="image/png" href="%BASE_URL%assets/ui/app-icon.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600;700&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html, body { margin: 0; min-height: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+      html[data-theme="cafe-journal"] { background: #e7d3b8; --boot-paper: #f4ecdf; --boot-ink: #3a2618; --boot-accent: #c45b3a; }
+      html[data-theme="kitchen-chalkboard"] { background: #14352e; --boot-paper: #1b4036; --boot-ink: #f6f1e6; --boot-accent: #f0d078; }
+      html[data-theme="watercolor-market"] { background: #d5e7d4; --boot-paper: #f4f1e6; --boot-ink: #24392c; --boot-accent: #3f7d55; }
+      html[data-theme="midnight-magazine"] { background: #070605; --boot-paper: #14100e; --boot-ink: #f3e6c8; --boot-accent: #d4b06a; }
+      #boot-splash {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+        background: var(--boot-paper, #f4ecdf); color: var(--boot-ink, #3a2618);
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+      }
+      #boot-splash.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+      #boot-splash .boot-mark {
+        width: 72px; height: 72px; flex: none; display: block; object-fit: contain;
+      }
+      #boot-splash .boot-mark.is-css-fallback {
+        width: 56px; height: 56px; border-radius: 18px;
+        border: 1.5px dashed color-mix(in srgb, var(--boot-accent) 45%, transparent);
+        background: color-mix(in srgb, var(--boot-accent) 12%, var(--boot-paper));
+      }
+      #boot-splash .boot-title {
+        font-family: "Ma Shan Zheng", "ZCOOL XiaoWei", "Noto Serif SC", serif;
+        font-size: clamp(28px, 8vw, 36px); font-weight: 400; letter-spacing: 0.04em;
+        line-height: 1.1;
+      }
+      #root {
+        min-height: 100%;
+        background: var(--boot-paper, #f4ecdf);
+        color: var(--boot-ink, #3a2618);
+      }
+    </style>
+    <script>
+      (function () {
+        var ok = ["cafe-journal", "kitchen-chalkboard", "watercolor-market", "midnight-magazine"];
+        var colors = {
+          "cafe-journal": "#f4ecdf",
+          "kitchen-chalkboard": "#1b4036",
+          "watercolor-market": "#f4f1e6",
+          "midnight-magazine": "#14100e"
+        };
+        var theme = "cafe-journal";
+        try {
+          var saved = localStorage.getItem("jte.theme");
+          if (ok.indexOf(saved) >= 0) theme = saved;
+        } catch (error) {}
+        document.documentElement.setAttribute("data-theme", theme);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", colors[theme]);
+        var density = "comfort";
+        try {
+          var d = localStorage.getItem("jte.list-density");
+          if (d === "compact" || d === "comfort") density = d;
+        } catch (error) {}
+        document.documentElement.setAttribute("data-density", density);
+      })();
+    </script>
+    <script>
+      (function () {
+        var maxMs = 480;
+        var closed = false;
+        function closeBoot() {
+          if (closed) return;
+          closed = true;
+          var el = document.getElementById("boot-splash");
+          if (!el) return;
+          el.classList.add("is-done");
+          setTimeout(function () {
+            try { el.remove(); } catch (e) {}
+          }, 200);
+        }
+        window.__jteCloseBoot = closeBoot;
+        /* Cap only — React closes after themed first paint (jte-app-painted / shell-ready). */
+        setTimeout(closeBoot, maxMs);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="boot-splash" aria-hidden="true">
+      <img class="boot-mark" src="%BASE_URL%assets/ui/splash-mark.png" alt="" width="72" height="72"
+        onerror="this.onerror=null;this.classList.add('is-css-fallback');this.removeAttribute('src');" />
+      <div class="boot-title">今天吃什么</div>
+    </div>
+    <div id="root"></div>
+    <noscript><p style="padding: 24px; font-family: sans-serif">今天吃什么需要打开 JavaScript。</p></noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,1147 @@
+:root,
+[data-theme="cafe-journal"] {
+  --bg: #e7d3b8;
+  --paper: #fbf6ee;
+  --ink: #3a2618;
+  --ink-soft: #8a6a52;
+  --title: #2b1a10;
+  --accent: #c45b3a;
+  --on-accent: #fffaf6;
+  --card: #fffaf4;
+  --card-border: 1px solid rgba(90, 58, 36, 0.1);
+  --line: rgba(90, 58, 36, 0.14);
+  --line-strong: rgba(74, 46, 28, 0.42);
+  --shadow: 0 10px 24px rgba(90, 50, 20, 0.08);
+  --frame-shadow: 0 30px 70px rgba(80, 40, 10, 0.2);
+  --card-radius: 14px;
+  --elevation: 0 8px 20px rgba(90, 50, 20, 0.1);
+  --radius: 22px;
+  --radius-sm: 16px;
+  --radius-media: 12px;
+  --font-display: "Ma Shan Zheng", "KaiTi", "STKaiti", "Songti SC", serif;
+  --font-body: "Noto Serif SC", "Songti SC", "STSong", "PMingLiU", serif;
+  --art-bg: #f4e7d6;
+  --plate: #fff;
+  --plate-stroke: #f0e2d4;
+  --well: #fffdfb;
+  --heart: #d45d5d;
+  --todo: #9a3d22;
+  --todo-bg: rgba(196, 91, 58, 0.14);
+  --nav: rgba(251, 246, 238, 0.94);
+  --chip: #fffaf4;
+  --banner: #c45b3a;
+  --banner-ink: #fffaf6;
+  --die-bg: #fffaf4;
+  --die-ink: #3a2618;
+  --watermark: rgba(90, 50, 30, 0.07);
+  --grain: 0.18;
+  --search-bg: #fff;
+  --danger: #a33b32;
+  --tone-red: #e15b45;
+  --tone-gold: #f0b429;
+  --tone-green: #6aaa58;
+  --tone-brown: #b56b43;
+  --tone-orange: #ef8a3a;
+  --tone-cream: #f6e6cc;
+  --tone-pink: #e58b98;
+  --shine: rgba(255, 255, 255, 0.75);
+  /* Semantic tokens (aliases — prefer these in components) */
+  --color-bg: var(--bg);
+  --color-surface: var(--paper);
+  --color-card: var(--card);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-soft);
+  --color-title: var(--title);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-border: var(--line);
+  --color-border-strong: var(--line-strong);
+
+  color-scheme: light;
+}
+
+[data-theme="kitchen-chalkboard"] {
+  --bg: #14352e;
+  --paper: #1b4036;
+  --ink: #f6f1e6;
+  --ink-soft: #ebe4d4;
+  --title: #fbf7ef;
+  --accent: #f0d078;
+  --on-accent: #1c2414;
+  --card: transparent;
+  --card-border: 1.5px solid rgba(246, 241, 230, 0.78);
+  --line: rgba(246, 241, 230, 0.2);
+  --line-strong: rgba(246, 241, 230, 0.82);
+  --shadow: none;
+  --frame-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  --card-radius: 14px;
+  --elevation: 0 10px 26px rgba(0, 0, 0, 0.32);
+  --radius: 18px;
+  --radius-sm: 14px;
+  --radius-media: 12px;
+  --font-display: "ZCOOL KuaiLe", "Yuanti SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --art-bg: transparent;
+  --plate: transparent;
+  --plate-stroke: rgba(255, 255, 255, 0.88);
+  --well: transparent;
+  --heart: #ffb4b4;
+  --todo: #f0d078;
+  --todo-bg: rgba(240, 208, 120, 0.16);
+  --nav: rgba(14, 36, 31, 0.94);
+  --chip: transparent;
+  --banner: transparent;
+  --banner-ink: #fbf7ef;
+  --die-bg: #f4efe4;
+  --die-ink: #1b3a30;
+  --watermark: rgba(255, 255, 255, 0.05);
+  --grain: 0.28;
+  --search-bg: rgba(0, 0, 0, 0.18);
+  --danger: #e7a398;
+  --tone-red: #ef7b6a;
+  --tone-gold: #f2d48a;
+  --tone-green: #9ed68a;
+  --tone-brown: #e0a36a;
+  --tone-orange: #f3b06a;
+  --tone-cream: #f7efe0;
+  --tone-pink: #f0a0b0;
+  --shine: rgba(255, 255, 255, 0.18);
+  /* Semantic tokens (aliases — prefer these in components) */
+  --color-bg: var(--bg);
+  --color-surface: var(--paper);
+  --color-card: var(--card);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-soft);
+  --color-title: var(--title);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-border: var(--line);
+  --color-border-strong: var(--line-strong);
+
+  color-scheme: dark;
+}
+
+[data-theme="watercolor-market"] {
+  --bg: #d5e7d4;
+  --paper: #f7f4ea;
+  --ink: #24392c;
+  --ink-soft: #5d7464;
+  --title: #1e3b2c;
+  --accent: #3f7d55;
+  --on-accent: #f7fff8;
+  --card: rgba(255, 252, 246, 0.92);
+  --card-border: 1px solid rgba(70, 100, 70, 0.08);
+  --line: rgba(40, 70, 50, 0.12);
+  --line-strong: rgba(36, 70, 48, 0.4);
+  --shadow: 0 12px 24px rgba(60, 90, 60, 0.08);
+  --frame-shadow: 0 24px 60px rgba(40, 70, 40, 0.16);
+  --card-radius: 14px;
+  --elevation: 0 8px 20px rgba(60, 90, 60, 0.11);
+  --radius: 18px;
+  --radius-sm: 14px;
+  --radius-media: 12px;
+  --font-display: "ZCOOL XiaoWei", "Songti SC", "STSong", serif;
+  --font-body: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --art-bg: rgba(255, 252, 246, 0.55);
+  --plate: #fff;
+  --plate-stroke: #e7efe4;
+  --well: #fffefb;
+  --heart: #d4656a;
+  --todo: #8d3d3a;
+  --todo-bg: rgba(212, 120, 110, 0.16);
+  --nav: rgba(247, 244, 234, 0.94);
+  --chip: #fff;
+  --banner: #f6e3df;
+  --banner-ink: #7a3e3a;
+  --die-bg: #fff;
+  --die-ink: #24392c;
+  --watermark: rgba(50, 90, 60, 0.07);
+  --grain: 0.12;
+  --search-bg: #fff;
+  --danger: #a33b32;
+  --tone-red: #e06a58;
+  --tone-gold: #e7c15a;
+  --tone-green: #7eb86a;
+  --tone-brown: #c4845c;
+  --tone-orange: #ee9458;
+  --tone-cream: #f6e6cc;
+  --tone-pink: #e7a0a8;
+  --shine: rgba(255, 255, 255, 0.8);
+  /* Semantic tokens (aliases — prefer these in components) */
+  --color-bg: var(--bg);
+  --color-surface: var(--paper);
+  --color-card: var(--card);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-soft);
+  --color-title: var(--title);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-border: var(--line);
+  --color-border-strong: var(--line-strong);
+
+  color-scheme: light;
+}
+
+[data-theme="midnight-magazine"] {
+  --bg: #070605;
+  --paper: #14100e;
+  --ink: #f3e6c8;
+  --ink-soft: #d2c09a;
+  --title: #f6e7c4;
+  --accent: #d4b06a;
+  --on-accent: #1a1208;
+  --card: #1b1512;
+  --card-border: 1px solid rgba(212, 176, 106, 0.42);
+  --line: rgba(212, 176, 106, 0.22);
+  --line-strong: rgba(232, 208, 150, 0.72);
+  --shadow: none;
+  --frame-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  --card-radius: 14px;
+  --elevation: 0 12px 28px rgba(0, 0, 0, 0.48);
+  --radius: 12px;
+  --radius-sm: 10px;
+  --radius-media: 10px;
+  --font-display: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --font-body: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --art-bg: #211814;
+  --plate: #2a211c;
+  --plate-stroke: rgba(212, 176, 106, 0.75);
+  --well: #1a1411;
+  --heart: #e7b4b0;
+  --todo: #e7c98a;
+  --todo-bg: rgba(212, 176, 106, 0.14);
+  --nav: rgba(10, 8, 7, 0.94);
+  --chip: transparent;
+  --banner: transparent;
+  --banner-ink: #f6e7c4;
+  --die-bg: #c6a15b;
+  --die-ink: #1a1208;
+  --watermark: rgba(212, 176, 106, 0.06);
+  --grain: 0.22;
+  --search-bg: rgba(255, 255, 255, 0.03);
+  --danger: #e7a8a0;
+  --tone-red: #c45448;
+  --tone-gold: #e0b15a;
+  --tone-green: #7ea36a;
+  --tone-brown: #a86b45;
+  --tone-orange: #d4844a;
+  --tone-cream: #e6d2ae;
+  --tone-pink: #c47b84;
+  --shine: rgba(255, 230, 180, 0.14);
+  /* Semantic tokens (aliases — prefer these in components) */
+  --color-bg: var(--bg);
+  --color-surface: var(--paper);
+  --color-card: var(--card);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-soft);
+  --color-title: var(--title);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-border: var(--line);
+  --color-border-strong: var(--line-strong);
+
+  color-scheme: dark;
+}
+
+[data-theme="cafe-journal"] .holes {
+  display: block;
+  z-index: 4;
+  left: 7px;
+  top: 18px;
+  bottom: 74px;
+  width: 12px;
+  background: radial-gradient(circle at 6px 8px, transparent 3.5px, rgba(120, 80, 40, 0.28) 4.2px, transparent 5.2px) 0 0 / 12px 28px;
+}
+[data-theme="cafe-journal"] {
+  --page-gutter-start: 22px; /* clear notebook holes */
+}
+[data-theme="cafe-journal"] .hero-art { margin-left: 0; }
+[data-theme="cafe-journal"] .stain { display: block; z-index: 1; border-radius: 50%; }
+[data-theme="cafe-journal"] .stain-a {
+  width: 130px;
+  height: 130px;
+  right: -28px;
+  top: 86px;
+  background: radial-gradient(circle, transparent 42%, rgba(120, 72, 32, 0.18) 49%, rgba(120, 72, 32, 0.05) 58%, transparent 64%);
+}
+[data-theme="cafe-journal"] .stain-b {
+  width: 78px;
+  height: 78px;
+  left: 24px;
+  bottom: 150px;
+  background: radial-gradient(circle, transparent 40%, rgba(90, 50, 20, 0.12) 48%, transparent 60%);
+}
+
+[data-theme="kitchen-chalkboard"] .app-frame {
+  box-shadow: inset 0 0 0 7px rgba(0, 0, 0, 0.18), inset 0 0 0 9px rgba(255, 255, 255, 0.08);
+}
+[data-theme="kitchen-chalkboard"] .grain { mix-blend-mode: overlay; }
+[data-theme="kitchen-chalkboard"] .search { border-radius: 999px; border-width: 1.5px; }
+[data-theme="kitchen-chalkboard"] .cat {
+  border: none;
+  box-shadow: none;
+  min-height: 86px;
+}
+[data-theme="kitchen-chalkboard"] .cat.motif-home { background: #e36a5d; color: #fffaf6; }
+[data-theme="kitchen-chalkboard"] .cat.motif-meat { background: #e3a15a; color: #2a1a10; }
+[data-theme="kitchen-chalkboard"] .cat.motif-sea { background: #6aa8c8; color: #07202c; }
+[data-theme="kitchen-chalkboard"] .cat.motif-veg { background: #7dba6a; color: #14210f; }
+[data-theme="kitchen-chalkboard"] .cat.motif-soup { background: #f0d78a; color: #2a2110; }
+[data-theme="kitchen-chalkboard"] .cat.motif-cold { background: #8fd0c8; color: #12302c; }
+[data-theme="kitchen-chalkboard"] .cat.motif-staple { background: #d7e6f5; color: #1c2c40; }
+[data-theme="kitchen-chalkboard"] .cat-paint { display: block; }
+[data-theme="kitchen-chalkboard"] .cat-line { display: none; }
+[data-theme="kitchen-chalkboard"] .app-frame::before {
+  opacity: 0.28;
+  mix-blend-mode: soft-light;
+}
+[data-theme="kitchen-chalkboard"] .random-banner {
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  box-shadow: none;
+}
+[data-theme="kitchen-chalkboard"] .banner-title { color: #f2d48a; font-size: 28px; }
+[data-theme="kitchen-chalkboard"] .heart,
+[data-theme="midnight-magazine"] .heart {
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.86);
+}
+[data-theme="kitchen-chalkboard"] .couple:not(:has(.couple-asset)) .couple-cute,
+[data-theme="midnight-magazine"] .couple:not(:has(.couple-asset)) .couple-cute { display: none; }
+[data-theme="kitchen-chalkboard"] .couple:not(:has(.couple-asset)) .couple-line,
+[data-theme="midnight-magazine"] .couple:not(:has(.couple-asset)) .couple-line { display: block; }
+[data-theme="kitchen-chalkboard"] .card-body h3,
+[data-theme="kitchen-chalkboard"] .dish-title,
+[data-theme="kitchen-chalkboard"] .brand h1 { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.18); }
+
+[data-theme="watercolor-market"] .app-frame {
+  background:
+    radial-gradient(280px 200px at 110% -8%, rgba(232, 168, 156, 0.55), transparent 70%),
+    radial-gradient(240px 220px at -16% 6%, rgba(170, 206, 164, 0.7), transparent 70%),
+    radial-gradient(200px 160px at 80% 108%, rgba(196, 214, 150, 0.45), transparent 70%),
+    var(--paper);
+}
+[data-theme="watercolor-market"] .cat {
+  border-radius: 3px 14px 10px 16px;
+  position: relative;
+}
+[data-theme="watercolor-market"] .cat::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 28px;
+  height: 10px;
+  transform: translateX(-50%) rotate(-6deg);
+  background: rgba(214, 196, 140, 0.92);
+}
+[data-theme="watercolor-market"] .dish-card { position: relative; }
+[data-theme="watercolor-market"] .dish-card::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(226, 206, 148, 0.88);
+  z-index: 2;
+}
+[data-theme="watercolor-market"] .dish-card:nth-child(odd) { transform: rotate(-0.35deg); }
+[data-theme="watercolor-market"] .dish-card:nth-child(even) { transform: rotate(0.35deg); }
+[data-theme="watercolor-market"] .dice-mini { display: none; }
+[data-theme="watercolor-market"] .stamp { display: flex; }
+[data-theme="watercolor-market"] .random-banner { box-shadow: none; }
+
+[data-theme="midnight-magazine"] .binding {
+  display: block;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  background:
+    radial-gradient(circle at 8px 18px, transparent 2px, rgba(212, 176, 106, 0.85) 2.6px, transparent 3.6px) 0 0 / 16px 36px,
+    linear-gradient(#2a2118, #1a120d);
+}
+[data-theme="midnight-magazine"] {
+  --page-gutter-start: 26px; /* clear binding rail */
+}
+[data-theme="midnight-magazine"] .hero-art { margin-left: 0; }
+[data-theme="midnight-magazine"] .grain { mix-blend-mode: overlay; }
+[data-theme="midnight-magazine"] .cat {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--accent);
+}
+[data-theme="midnight-magazine"] .cat-paint { display: block; }
+[data-theme="midnight-magazine"] .cat-line { display: none; }
+[data-theme="midnight-magazine"] .app-frame::before {
+  opacity: 0.3;
+  mix-blend-mode: soft-light;
+}
+[data-theme="midnight-magazine"] .cat-name {
+  color: var(--ink);
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-theme="midnight-magazine"] .brand h1 {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  --fs-brand: clamp(28px, 8vw, 34px);
+  font-size: var(--fs-brand);
+}
+[data-theme="midnight-magazine"] .search,
+[data-theme="midnight-magazine"] .random-banner,
+[data-theme="midnight-magazine"] .sheet { border-radius: 16px; }
+[data-theme="midnight-magazine"] .random-banner {
+  border: 1px solid rgba(212, 176, 106, 0.55);
+  background: linear-gradient(180deg, rgba(212, 176, 106, 0.08), transparent);
+  box-shadow: none;
+}
+[data-theme="midnight-magazine"] .page-title,
+[data-theme="midnight-magazine"] .dish-title { letter-spacing: 0.06em; }
+
+/* —— Phase 2B: closer to Codex mocks —— */
+
+[data-theme="cafe-journal"] .app-frame {
+  background:
+    radial-gradient(120px 90px at 92% 12%, rgba(120, 72, 32, 0.12), transparent 70%),
+    radial-gradient(90px 70px at 8% 78%, rgba(90, 50, 20, 0.08), transparent 65%),
+    linear-gradient(180deg, #fbf6ee 0%, #f7efe3 48%, #f3e8d8 100%);
+}
+[data-theme="cafe-journal"] .stain-a {
+  width: 148px;
+  height: 148px;
+  right: -32px;
+  top: 72px;
+  background:
+    radial-gradient(circle, transparent 38%, rgba(110, 64, 28, 0.22) 46%, rgba(110, 64, 28, 0.08) 56%, transparent 64%),
+    radial-gradient(circle at 58% 42%, transparent 55%, rgba(90, 50, 20, 0.1) 62%, transparent 70%);
+  transform: rotate(-8deg);
+}
+[data-theme="cafe-journal"] .stain-b {
+  width: 92px;
+  height: 92px;
+  left: 18px;
+  bottom: 140px;
+  opacity: 0.9;
+}
+[data-theme="cafe-journal"] .stain-a::after {
+  content: "Good Food Better Together";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: "Ma Shan Zheng", cursive;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(90, 55, 30, 0.28);
+  transform: rotate(-18deg);
+  text-align: center;
+  line-height: 1.2;
+  padding: 28px;
+}
+[data-theme="cafe-journal"] .dish-card {
+  border-radius: var(--card-radius);
+  box-shadow: var(--elevation), 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+[data-theme="cafe-journal"] .cat {
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffaf4, #f6eadc);
+}
+[data-theme="cafe-journal"] .random-banner {
+  background: linear-gradient(135deg, #c45b3a, #b14d32);
+  box-shadow: 0 14px 28px rgba(150, 60, 30, 0.22);
+}
+[data-theme="cafe-journal"] .search {
+  background: #fffefb;
+  box-shadow: 0 2px 8px rgba(90, 50, 20, 0.05);
+}
+[data-theme="cafe-journal"] .chip.on {
+  box-shadow: 0 4px 10px rgba(196, 91, 58, 0.25);
+}
+
+[data-theme="kitchen-chalkboard"] {
+  --paper: #1a3d34;
+  --grain: 0.34;
+}
+[data-theme="kitchen-chalkboard"] .app-frame {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.04), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(0, 0, 0, 0.2), transparent 55%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 3px),
+    #1a3d34;
+  box-shadow:
+    inset 0 0 0 6px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 8px rgba(255, 255, 255, 0.07),
+    var(--frame-shadow);
+}
+[data-theme="kitchen-chalkboard"] .dish-card {
+  border: 1.5px solid rgba(246, 241, 230, 0.82);
+  border-radius: var(--card-radius);
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: var(--elevation);
+}
+[data-theme="kitchen-chalkboard"] .art-frame {
+  background: rgba(0, 0, 0, 0.16);
+}
+[data-theme="kitchen-chalkboard"] .cat {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  border-radius: 12px;
+}
+[data-theme="kitchen-chalkboard"] .chip {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  border-radius: 999px;
+}
+[data-theme="kitchen-chalkboard"] .chip.on {
+  background: rgba(240, 208, 120, 0.18);
+  color: #f0d078;
+  border-color: #f0d078;
+}
+[data-theme="kitchen-chalkboard"] .search {
+  border: 1.5px solid rgba(246, 241, 230, 0.7);
+  background: rgba(0, 0, 0, 0.22);
+}
+[data-theme="kitchen-chalkboard"] .btn-primary {
+  background: transparent;
+  color: #f0d078;
+  border: 2px solid #f0d078;
+  box-shadow: none;
+}
+[data-theme="kitchen-chalkboard"] .random-banner {
+  border-width: 2.5px;
+  border-style: solid;
+  border-color: rgba(255, 200, 120, 0.9);
+  background: rgba(0, 0, 0, 0.14);
+}
+[data-theme="kitchen-chalkboard"] .shop-strip,
+[data-theme="kitchen-chalkboard"] .tonight-pill,
+[data-theme="kitchen-chalkboard"] .panel {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  background: rgba(0, 0, 0, 0.14);
+}
+[data-theme="kitchen-chalkboard"] .tabbar {
+  border-top: 1.5px solid rgba(246, 241, 230, 0.25);
+  background: rgba(10, 28, 24, 0.96);
+}
+[data-theme="kitchen-chalkboard"] .steps .num {
+  background: transparent;
+  border: 1.5px solid #f0d078;
+  color: #f0d078;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+[data-theme="watercolor-market"] .app-frame {
+  background:
+    radial-gradient(320px 240px at 108% -10%, rgba(232, 168, 156, 0.62), transparent 68%),
+    radial-gradient(260px 240px at -18% 4%, rgba(170, 206, 164, 0.78), transparent 68%),
+    radial-gradient(220px 180px at 88% 112%, rgba(196, 214, 150, 0.5), transparent 70%),
+    radial-gradient(180px 140px at 40% 60%, rgba(255, 255, 255, 0.35), transparent 70%),
+    #f7f4ea;
+}
+[data-theme="watercolor-market"] .cat {
+  background: rgba(255, 252, 246, 0.88);
+  box-shadow: 0 6px 14px rgba(60, 90, 60, 0.08);
+}
+[data-theme="watercolor-market"] .cat.motif-home { background: rgba(244, 210, 204, 0.85); }
+[data-theme="watercolor-market"] .cat.motif-soup { background: rgba(244, 230, 186, 0.85); }
+[data-theme="watercolor-market"] .cat.motif-cold { background: rgba(210, 230, 204, 0.88); }
+[data-theme="watercolor-market"] .cat.motif-staple { background: rgba(210, 224, 236, 0.88); }
+[data-theme="watercolor-market"] .cat.motif-meat { background: rgba(240, 214, 190, 0.88); }
+[data-theme="watercolor-market"] .cat.motif-sea { background: rgba(200, 220, 230, 0.88); }
+[data-theme="watercolor-market"] .cat.motif-veg { background: rgba(214, 232, 200, 0.9); }
+[data-theme="watercolor-market"] .cat::before {
+  background: linear-gradient(90deg, #c9b87a, #e0d09a 50%, #c9b87a);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 1px;
+}
+[data-theme="watercolor-market"] .dish-card {
+  background: rgba(255, 252, 246, 0.95);
+  box-shadow: var(--elevation);
+  border-radius: var(--card-radius);
+}
+[data-theme="watercolor-market"] .dish-card::before {
+  background: linear-gradient(90deg, rgba(210, 190, 130, 0.55), rgba(236, 220, 170, 0.95), rgba(210, 190, 130, 0.55));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border-radius: 1px;
+  height: 16px;
+  width: 52px;
+}
+[data-theme="watercolor-market"] .dish-card::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 18px;
+  height: 12px;
+  background: rgba(180, 210, 170, 0.55);
+  transform: rotate(12deg);
+  z-index: 2;
+  border-radius: 1px;
+}
+[data-theme="watercolor-market"] .random-banner {
+  background: linear-gradient(135deg, #f3d5c8, #f6e3df);
+  color: #7a3e3a;
+  border-radius: 6px 18px 14px 20px;
+  position: relative;
+}
+[data-theme="watercolor-market"] .stamp {
+  border-color: #c4504a;
+  color: #c4504a;
+  background: rgba(255, 255, 255, 0.35);
+}
+[data-theme="watercolor-market"] .search {
+  background: #fff;
+  border: 1px solid rgba(40, 70, 50, 0.14);
+  box-shadow: 0 4px 12px rgba(60, 90, 60, 0.06);
+}
+
+[data-theme="midnight-magazine"] .app-frame {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 176, 106, 0.08), transparent 55%),
+    linear-gradient(180deg, #16120f, #0e0b09 40%, #0a0807);
+  box-shadow:
+    inset 0 0 0 1px rgba(212, 176, 106, 0.28),
+    var(--frame-shadow);
+}
+[data-theme="midnight-magazine"] .dish-card {
+  border: 1px solid rgba(212, 176, 106, 0.5);
+  box-shadow: var(--elevation), inset 0 0 0 3px rgba(20, 14, 10, 0.9), inset 0 0 0 4px rgba(212, 176, 106, 0.28);
+  background: #171210;
+  border-radius: var(--card-radius);
+}
+[data-theme="midnight-magazine"] .art-frame {
+  background: linear-gradient(180deg, #241c17, #1a1410);
+}
+[data-theme="midnight-magazine"] .cat {
+  border-bottom: 1px solid transparent;
+  padding-bottom: 6px;
+}
+[data-theme="midnight-magazine"] .cat:hover,
+[data-theme="midnight-magazine"] .cat:focus-visible {
+  border-bottom-color: var(--accent);
+}
+[data-theme="midnight-magazine"] .search {
+  border: 1px solid rgba(212, 176, 106, 0.55);
+  background: rgba(255, 230, 180, 0.03);
+}
+[data-theme="midnight-magazine"] .chip {
+  border: 1px solid rgba(212, 176, 106, 0.4);
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+[data-theme="midnight-magazine"] .chip.on {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+[data-theme="midnight-magazine"] .btn-primary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  letter-spacing: 0.08em;
+}
+[data-theme="midnight-magazine"] .random-banner {
+  border: 1px solid rgba(212, 176, 106, 0.7);
+  background:
+    linear-gradient(180deg, rgba(212, 176, 106, 0.12), transparent 60%),
+    #14100e;
+  border-radius: 12px;
+  position: relative;
+}
+[data-theme="midnight-magazine"] .random-banner::before,
+[data-theme="midnight-magazine"] .random-banner::after {
+  content: "✦";
+  position: absolute;
+  color: rgba(212, 176, 106, 0.45);
+  font-size: 12px;
+}
+[data-theme="midnight-magazine"] .random-banner::before { left: 10px; top: 8px; }
+[data-theme="midnight-magazine"] .random-banner::after { right: 10px; bottom: 8px; }
+[data-theme="midnight-magazine"] .banner-title {
+  letter-spacing: 0.14em;
+}
+[data-theme="midnight-magazine"] .shop-strip,
+[data-theme="midnight-magazine"] .tonight-pill,
+[data-theme="midnight-magazine"] .panel,
+[data-theme="midnight-magazine"] .video-hero {
+  border: 1px solid rgba(212, 176, 106, 0.42);
+  background: #171210;
+}
+[data-theme="midnight-magazine"] .tabbar {
+  border-top: 1px solid rgba(212, 176, 106, 0.28);
+}
+[data-theme="midnight-magazine"] .steps .num {
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+[data-theme="midnight-magazine"] .vol {
+  letter-spacing: 0.2em;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+@media (min-width: 880px) {
+  [data-theme="cafe-journal"] body,
+  body:has([data-theme="cafe-journal"]) {
+    background: #d9c2a4;
+  }
+  [data-theme="kitchen-chalkboard"] .world {
+    filter: none;
+  }
+}
+
+[data-theme="kitchen-chalkboard"] .video-hero,
+[data-theme="kitchen-chalkboard"] .video-block,
+[data-theme="kitchen-chalkboard"] .couple-panel .room-card {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink);
+}
+[data-theme="kitchen-chalkboard"] .video-link {
+  border-bottom-color: rgba(246, 241, 230, 0.22);
+  color: var(--ink);
+}
+[data-theme="kitchen-chalkboard"] .video-link em,
+[data-theme="kitchen-chalkboard"] .video-hero-body em,
+[data-theme="kitchen-chalkboard"] .video-more-hint {
+  color: #ebe4d4;
+}
+[data-theme="kitchen-chalkboard"] .field input,
+[data-theme="kitchen-chalkboard"] .field textarea,
+[data-theme="kitchen-chalkboard"] .panel input,
+[data-theme="kitchen-chalkboard"] .add-row input,
+[data-theme="kitchen-chalkboard"] .search input {
+  color: #f6f1e6;
+  caret-color: #f6f1e6;
+}
+[data-theme="kitchen-chalkboard"] .search input::placeholder,
+[data-theme="kitchen-chalkboard"] .field input::placeholder,
+[data-theme="kitchen-chalkboard"] .field textarea::placeholder {
+  color: #ebe4d4;
+}
+[data-theme="kitchen-chalkboard"] .join-row .field input {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  background: rgba(0, 0, 0, 0.22);
+}
+[data-theme="kitchen-chalkboard"] .sync-pack {
+  border-top-color: rgba(246, 241, 230, 0.28);
+}
+[data-theme="kitchen-chalkboard"] input:-webkit-autofill,
+[data-theme="kitchen-chalkboard"] input:-webkit-autofill:hover,
+[data-theme="kitchen-chalkboard"] input:-webkit-autofill:focus,
+[data-theme="kitchen-chalkboard"] textarea:-webkit-autofill {
+  -webkit-text-fill-color: #f6f1e6;
+  box-shadow: 0 0 0 1000px #14352e inset;
+  transition: background-color 9999s ease-out;
+}
+
+[data-theme="midnight-magazine"] .couple-panel .room-card {
+  border: 1px solid rgba(212, 176, 106, 0.42);
+  background: #171210;
+  color: var(--ink);
+}
+[data-theme="midnight-magazine"] .video-link {
+  border-bottom-color: rgba(212, 176, 106, 0.22);
+  color: var(--ink);
+}
+[data-theme="midnight-magazine"] .video-link em,
+[data-theme="midnight-magazine"] .video-hero-body em,
+[data-theme="midnight-magazine"] .video-more-hint {
+  color: #d2c09a;
+}
+[data-theme="midnight-magazine"] .field input,
+[data-theme="midnight-magazine"] .field textarea,
+[data-theme="midnight-magazine"] .panel input,
+[data-theme="midnight-magazine"] .add-row input,
+[data-theme="midnight-magazine"] .search input {
+  color: #f3e6c8;
+  caret-color: #f3e6c8;
+}
+[data-theme="midnight-magazine"] .search input::placeholder,
+[data-theme="midnight-magazine"] .field input::placeholder,
+[data-theme="midnight-magazine"] .field textarea::placeholder {
+  color: #d2c09a;
+}
+[data-theme="midnight-magazine"] .join-row .field input {
+  border: 1px solid rgba(212, 176, 106, 0.45);
+  background: rgba(255, 230, 180, 0.04);
+}
+[data-theme="midnight-magazine"] .sync-pack {
+  border-top-color: rgba(212, 176, 106, 0.28);
+}
+[data-theme="midnight-magazine"] .search {
+  background: rgba(255, 230, 180, 0.06);
+}
+[data-theme="midnight-magazine"] input:-webkit-autofill,
+[data-theme="midnight-magazine"] input:-webkit-autofill:hover,
+[data-theme="midnight-magazine"] input:-webkit-autofill:focus,
+[data-theme="midnight-magazine"] textarea:-webkit-autofill {
+  -webkit-text-fill-color: #f3e6c8;
+  box-shadow: 0 0 0 1000px #14100e inset;
+  transition: background-color 9999s ease-out;
+}
+
+/* ensure texture var visible on all four themes */
+[data-theme="cafe-journal"] .app-frame::before {
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+}
+[data-theme="watercolor-market"] .app-frame::before {
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+}
+
+/* v45 theme polish — bg/surface crossfade ≤250ms */
+html,
+body {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+.app-frame,
+.page,
+.panel,
+.search,
+.tabbar,
+.sheet,
+.random-banner,
+.subhead,
+.chip,
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+/* Keep transform for press/hover; still crossfade surface */
+.dish-card {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.18s ease,
+    background 0.25s ease,
+    transform 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  .app-frame,
+  .page,
+  .dish-card,
+  .panel,
+  .search,
+  .tabbar,
+  .sheet,
+  .random-banner,
+  .subhead,
+  .chip,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    transition: none !important;
+  }
+}
+
+/* dish detail: keep panels readable on chalkboard / midnight */
+[data-theme="kitchen-chalkboard"] .panel,
+[data-theme="kitchen-chalkboard"] .ingredient-list,
+[data-theme="kitchen-chalkboard"] .steps {
+  border: 1.5px solid rgba(246, 241, 230, 0.55);
+  background: rgba(0, 0, 0, 0.16);
+}
+[data-theme="midnight-magazine"] .ingredient-list,
+[data-theme="midnight-magazine"] .steps {
+  border: 1px solid rgba(212, 176, 106, 0.35);
+  background: #171210;
+}
+[data-theme="kitchen-chalkboard"] .theme-tip,
+[data-theme="midnight-magazine"] .theme-tip {
+  background: rgba(0, 0, 0, 0.28);
+  border-style: solid;
+}
+[data-theme="watercolor-market"] .theme-tip {
+  background: color-mix(in srgb, var(--paper) 78%, #e8a89c);
+}
+[data-theme="cafe-journal"] .theme-tip {
+  background: color-mix(in srgb, var(--paper) 78%, #c45b3a);
+}
+
+/* home header actions stay crisp on dark themes */
+[data-theme="kitchen-chalkboard"] .theme-btn,
+[data-theme="midnight-magazine"] .theme-btn {
+  border-color: rgba(246, 241, 230, 0.45);
+  background: rgba(0, 0, 0, 0.22);
+}
+[data-theme="midnight-magazine"] .theme-btn {
+  border-color: rgba(212, 176, 106, 0.45);
+}
+
+
+/* home strip section-head lock — follow global type scale */
+[data-theme] .recent-section .section-head h2 {
+  font-size: var(--fs-section-title);
+  font-weight: 400;
+  line-height: var(--lh-title);
+  letter-spacing: 0.02em;
+}
+[data-theme] .recent-section {
+  margin: 10px 0 var(--section-gap);
+}
+[data-theme] .recent-section .section-head {
+  margin: 0 0 10px;
+  padding: 0;
+}
+[data-theme] .page-title {
+  font-size: var(--fs-page-title);
+  line-height: var(--lh-title);
+}
+[data-theme] .dish-title {
+  font-size: var(--fs-dish-title);
+  line-height: var(--lh-title);
+}
+[data-theme] .block-title,
+[data-theme] .section-head h2,
+[data-theme] .panel h2 {
+  font-size: var(--fs-section-title);
+}
+[data-theme] .eyebrow,
+[data-theme] .pill,
+[data-theme] .card-body p,
+[data-theme] .recent-name,
+[data-theme] .source-hint {
+  font-size: var(--fs-meta);
+}
+
+
+/* v28: search focus ring readable on all four themes */
+[data-theme="cafe-journal"] .search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(196, 91, 58, 0.28), 0 2px 8px rgba(90, 50, 20, 0.06);
+}
+[data-theme="kitchen-chalkboard"] .search:focus-within {
+  border-color: #f0d078;
+  box-shadow: 0 0 0 3px rgba(240, 208, 120, 0.32);
+}
+[data-theme="watercolor-market"] .search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(90, 140, 90, 0.26), 0 4px 12px rgba(60, 90, 60, 0.08);
+}
+[data-theme="midnight-magazine"] .search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(212, 176, 106, 0.34);
+}
+[data-theme="cafe-journal"] .steps .num,
+[data-theme="watercolor-market"] .steps .num {
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+
+/* ========== v39 · contrast polish (midnight + chalkboard) ========== */
+[data-theme="kitchen-chalkboard"] .btn-ghost {
+  border-color: rgba(246, 241, 230, 0.72);
+  color: #f6f1e6;
+  background: rgba(0, 0, 0, 0.14);
+}
+[data-theme="kitchen-chalkboard"] .chip:not(.on) {
+  border-color: rgba(246, 241, 230, 0.72);
+  color: #f6f1e6;
+  background: rgba(0, 0, 0, 0.16);
+}
+[data-theme="kitchen-chalkboard"] .empty p,
+[data-theme="kitchen-chalkboard"] .hint,
+[data-theme="kitchen-chalkboard"] .list-end,
+[data-theme="kitchen-chalkboard"] .source-hint,
+[data-theme="kitchen-chalkboard"] .card-meta {
+  color: #ebe4d4;
+}
+[data-theme="kitchen-chalkboard"] .empty strong {
+  color: #fbf7ef;
+}
+
+[data-theme="midnight-magazine"] .btn-ghost {
+  border-color: rgba(212, 176, 106, 0.62);
+  color: #f3e6c8;
+  background: rgba(255, 230, 180, 0.04);
+}
+[data-theme="midnight-magazine"] .chip:not(.on) {
+  border-color: rgba(212, 176, 106, 0.58);
+  color: #f3e6c8;
+  background: rgba(255, 230, 180, 0.05);
+}
+[data-theme="midnight-magazine"] .empty p,
+[data-theme="midnight-magazine"] .hint,
+[data-theme="midnight-magazine"] .list-end,
+[data-theme="midnight-magazine"] .source-hint,
+[data-theme="midnight-magazine"] .card-meta {
+  color: #d2c09a;
+}
+[data-theme="midnight-magazine"] .empty strong {
+  color: #f6e7c4;
+}
+
+
+/* ========== v45 · theme crossfade already ≤250ms above ========== */
+
+/* ========== v45 · dish-card pressed (touch) ========== */
+.dish-card.is-pressed {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.dish-card.is-pressed .art-frame .dish-art-img.is-photo,
+.dish-card.is-pressed .art-frame .asset-wrap,
+.dish-card.is-pressed .art-frame .dish-art {
+  transform: none; /* don't fight press with cover zoom */
+}
+[data-theme="cafe-journal"] .dish-card.is-pressed {
+  box-shadow: 0 2px 8px rgba(90, 50, 20, 0.1), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+[data-theme="kitchen-chalkboard"] .dish-card.is-pressed {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+}
+[data-theme="watercolor-market"] .dish-card:nth-child(odd).is-pressed {
+  transform: rotate(-0.35deg) scale(0.98);
+}
+[data-theme="watercolor-market"] .dish-card:nth-child(even).is-pressed {
+  transform: rotate(0.35deg) scale(0.98);
+}
+[data-theme="watercolor-market"] .dish-card.is-pressed {
+  box-shadow: 0 2px 8px rgba(60, 90, 60, 0.12);
+}
+[data-theme="midnight-magazine"] .dish-card.is-pressed {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 3px rgba(20, 14, 10, 0.9),
+    inset 0 0 0 4px rgba(212, 176, 106, 0.22);
+}
+@media (hover: hover) {
+  .dish-card.is-pressed:hover {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  [data-theme="watercolor-market"] .dish-card:nth-child(odd).is-pressed:hover {
+    transform: rotate(-0.35deg) scale(0.98);
+  }
+  [data-theme="watercolor-market"] .dish-card:nth-child(even).is-pressed:hover {
+    transform: rotate(0.35deg) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dish-card.is-pressed {
+    transform: none;
+  }
+  [data-theme="watercolor-market"] .dish-card:nth-child(odd).is-pressed,
+  [data-theme="watercolor-market"] .dish-card:nth-child(even).is-pressed {
+    transform: none;
+  }
+}
+
+/* ========== v45 · dish detail sticky actions under subhead ========== */
+.dish-page:not(.is-cook) .dish-actions {
+  position: sticky;
+  top: 52px;
+  z-index: 4;
+  margin-left: calc(-1 * var(--page-gutter-start));
+  margin-right: calc(-1 * var(--page-gutter));
+  padding: 8px var(--page-gutter) 10px var(--page-gutter-start);
+  background: color-mix(in srgb, var(--color-surface, var(--paper)) 92%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border, var(--line)) 55%, transparent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+.dish-page.is-cook .dish-actions {
+  position: static;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-theme="kitchen-chalkboard"] .dish-page:not(.is-cook) .dish-actions,
+[data-theme="midnight-magazine"] .dish-page:not(.is-cook) .dish-actions {
+  background: color-mix(in srgb, var(--color-surface, var(--paper)) 88%, transparent);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+/* ========== v45 · merged shopping list (tonight) ========== */
+.merged-shop {
+  margin-top: 12px;
+}
+.merged-shop .block-head {
+  margin-bottom: 4px;
+}
+.merged-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.merged-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--color-border, var(--line));
+  align-items: baseline;
+}
+.merged-list li:last-child { border-bottom: 0; }
+.merged-name {
+  font-size: calc(var(--fs-body) + 1px);
+  color: var(--color-text, var(--ink));
+  font-weight: 500;
+}
+.merged-amt {
+  font-size: calc(var(--fs-meta) + 1px);
+  color: var(--color-accent, var(--accent));
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.merged-src {
+  grid-column: 1 / -1;
+  font-size: var(--fs-meta);
+  color: var(--color-text-muted, var(--ink-soft));
+  opacity: 0.85;
+}
+.merged-list li.is-seasoning .merged-name {
+  color: var(--color-text-muted, var(--ink-soft));
+  font-weight: 400;
+}
