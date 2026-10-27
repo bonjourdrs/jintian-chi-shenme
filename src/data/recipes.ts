@@ -644,6 +644,7 @@ const OVERRIDE_MAP = overrides as OverrideFile;
 
 
 const EXTRA_ALIASES: Record<string, string> = {
+  青红椒: "青红椒",
   糖: "白糖",
   葱: "小葱",
   蒜: "大蒜",

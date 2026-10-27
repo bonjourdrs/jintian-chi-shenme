@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { formatSyncRelative, formatSyncTime, loadRoomMeta, ROOM_KEY, type CoupleRoomMeta } from "../lib/coupleSync.ts";
+import {
+  formatSyncRelative,
+  formatSyncTime,
+  loadRoomMeta,
+  ROOM_KEY,
+  type CoupleRoomMeta,
+} from "../lib/coupleSync.ts";
 import { loadDisplayNick, sanitizeNick } from "../lib/nicks.ts";
 
 type Props = {
@@ -38,18 +44,21 @@ export function SyncChip({ compact = false, className }: Props) {
     const refresh = () => setRoom(readMeta());
     refresh();
     const onStorage = (event: StorageEvent) => {
-      if (!event.key || event.key === ROOM_KEY || event.key.startsWith("jte.")) refresh();
+      if (!event.key || event.key === ROOM_KEY || event.key.startsWith("jte."))
+        refresh();
     };
     const onRoom = () => refresh();
     const onConflict = (event: Event) => {
-      const detail = (event as CustomEvent<{ kept?: "local" | "remote" }>).detail;
+      const detail = (event as CustomEvent<{ kept?: "local" | "remote" }>)
+        .detail;
       const kept = detail?.kept === "local" ? "local" : "remote";
       setFlash({ kept, at: Date.now() });
       refresh();
     };
     const onSyncStatus = (event: Event) => {
       const next = (event as CustomEvent<{ phase?: SyncPhase }>).detail?.phase;
-      if (next === "pending" || next === "syncing" || next === "idle") setPhase(next);
+      if (next === "pending" || next === "syncing" || next === "idle")
+        setPhase(next);
     };
     window.addEventListener("jte-room-changed", onRoom as EventListener);
     window.addEventListener("jte-sync-conflict", onConflict as EventListener);
@@ -62,8 +71,14 @@ export function SyncChip({ compact = false, className }: Props) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", refresh);
       window.removeEventListener("jte-room-changed", onRoom as EventListener);
-      window.removeEventListener("jte-sync-conflict", onConflict as EventListener);
-      window.removeEventListener("jte-sync-status", onSyncStatus as EventListener);
+      window.removeEventListener(
+        "jte-sync-conflict",
+        onConflict as EventListener,
+      );
+      window.removeEventListener(
+        "jte-sync-status",
+        onSyncStatus as EventListener,
+      );
       window.clearInterval(id);
       window.clearInterval(tick);
     };
@@ -89,7 +104,13 @@ export function SyncChip({ compact = false, className }: Props) {
   if (!room) {
     return (
       <Link
-        className={["sync-chip is-local", compact ? "is-compact" : "", className].filter(Boolean).join(" ")}
+        className={[
+          "sync-chip is-local",
+          compact ? "is-compact" : "",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         to="/us"
         title="今晚菜单只在这台机；去「我们」配对后可同步给对方"
       >
@@ -101,20 +122,41 @@ export function SyncChip({ compact = false, className }: Props) {
   }
 
   const syncing = phase === "pending" || phase === "syncing";
-  const synced = Boolean(room.lastSyncedAt);
-  const whenAbs = formatSyncTime(room.lastSyncedAt);
-  const whenRel = synced ? formatSyncRelative(room.lastSyncedAt, nowTick) : null;
+  const acknowledged = Boolean(
+    room.lastPeerSentId && room.lastPeerAckId === room.lastPeerSentId,
+  );
+  const synced = Boolean(room.lastCloudSavedAt);
+  const whenAbs = formatSyncTime(room.lastCloudSavedAt);
+  const whenRel = synced
+    ? formatSyncRelative(room.lastCloudSavedAt, nowTick)
+    : null;
   const names = nickPair(room);
   const flashLabel =
-    flash?.kept === "local" ? "已留本机" : flash?.kept === "remote" ? "已用对方" : null;
-  const label = flashLabel ?? (syncing ? "同步中…" : synced ? "已同步给对方" : "已配对 · 待同步");
+    flash?.kept === "local"
+      ? "已留本机"
+      : flash?.kept === "remote"
+        ? "已用对方"
+        : null;
+  const label = syncing
+    ? "同步中…"
+    : acknowledged
+      ? "对方已确认接收"
+      : room.lastPeerSentId
+        ? "已发送 · 等待确认"
+        : synced
+          ? "云备份已保存"
+          : "等待连接";
 
   return (
     <div
       className={[
         "sync-chip has-sync-action",
         syncing ? "is-syncing" : synced ? "is-synced" : "is-paired",
-        flash ? (flash.kept === "local" ? "is-kept-local" : "is-kept-remote") : "",
+        flash
+          ? flash.kept === "local"
+            ? "is-kept-local"
+            : "is-kept-remote"
+          : "",
         compact ? "is-compact" : "",
         className,
       ]
@@ -128,7 +170,7 @@ export function SyncChip({ compact = false, className }: Props) {
           : syncing
             ? "正在把今晚菜单推给对方…"
             : synced
-              ? `已与房间 ${room.code} 同步过 · 上次 ${whenAbs}${names ? ` · ${names}` : ""}`
+              ? `房间 ${room.code} 的云端备份 · 上次 ${whenAbs}${names ? ` · ${names}` : ""}`
               : `已进房间 ${room.code}，可立即同步`
       }
     >
@@ -140,7 +182,9 @@ export function SyncChip({ compact = false, className }: Props) {
             <span className="sync-chip-nicks">{names}</span>
             {" · "}
             {room.code}
-            {synced && !flashLabel && !syncing && whenRel ? ` · ${whenRel}` : ""}
+            {synced && !flashLabel && !syncing && whenRel
+              ? ` · ${whenRel}`
+              : ""}
           </span>
         ) : (
           <span className="sync-chip-aside">

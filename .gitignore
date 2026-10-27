@@ -22,3 +22,28 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.local/
+
+# Local audit recordings and recovery copies are not release source.
+audit/**/evidence/
+audit/**/*.png
+audit/**/*.tgz
+audit/**/*.log
+audit/mobile-app-v*/browser.*
+audit/fixes-v107/browser.cjs
+audit/fixes-v107/phone.cjs
+audit/mobile-app-v109/browser.cjs
+audit/wechat-v110/browser.cjs
+手机访问说明.md
+启动本地预览.command
+
+# Retain local QA working files; publish only the review and release notes.
+/audit/*
+!/audit/review-v106/
+/audit/review-v106/*
+!/audit/review-v106/findings.json
+!/audit/review-v106/交互设计与逻辑复查.md
+!/audit/release-v111/
+/audit/release-v111/*
+!/audit/release-v111/发布记录.md

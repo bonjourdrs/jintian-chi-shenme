@@ -1,5 +1,17 @@
+import { newId } from "../lib/id.ts";
+import {
+  loadLedgerDraft,
+  saveLedgerDraft,
+  clearLedgerDraft,
+} from "../lib/ledgerDrafts.ts";
+import { LEDGER_LIMITS } from "../lib/stateSchema.ts";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { BackIcon } from "../components/Icons.tsx";
 import { ThemeButton } from "../components/ThemeSheet.tsx";
 import { compressImage } from "../lib/image.ts";
@@ -12,21 +24,45 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
   const { id } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { state, saveLedger, deleteLedger, restoreLedger, addLedgerToMenu, toast } = useApp();
-  const existing = creating ? undefined : state.ledger.find((entry) => entry.id === id);
+  const {
+    state,
+    saveLedger,
+    deleteLedger,
+    restoreLedger,
+    addLedgerToMenu,
+    toast,
+  } = useApp();
+  const existing = creating
+    ? undefined
+    : state.ledger.find((entry) => entry.id === id);
   const missing = !creating && !existing;
 
-  const [name, setName] = useState(existing?.name ?? params.get("name") ?? "");
-  const [ingredients, setIngredients] = useState(existing?.ingredients ?? params.get("ingredients") ?? "");
-  const [notes, setNotes] = useState(existing?.notes ?? "");
-  const [image, setImage] = useState<string | undefined>(existing?.image);
+  const draftKey = creating ? "new" : (id ?? "new");
+  const [draft] = useState(() => loadLedgerDraft(draftKey));
+  const [draftSaved, setDraftSaved] = useState(!!draft);
+  const [baseServings, setBaseServings] = useState(
+    draft?.baseServings ?? existing?.baseServings ?? 2,
+  );
+  const [name, setName] = useState(
+    draft?.name ?? existing?.name ?? params.get("name") ?? "",
+  );
+  const [ingredients, setIngredients] = useState(
+    draft?.ingredients ??
+      existing?.ingredients ??
+      params.get("ingredients") ??
+      "",
+  );
+  const [notes, setNotes] = useState(draft?.notes ?? existing?.notes ?? "");
+  const [image, setImage] = useState<string | undefined>(
+    draft?.image ?? existing?.image,
+  );
   const [confirm, setConfirm] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [dirty, setDirty] = useState(!!draft);
   const [nameError, setNameError] = useState<string | null>(null);
   const [ingredientsError, setIngredientsError] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const ingredientsRef = useRef<HTMLTextAreaElement>(null);
-  useTitle(creating ? "写一道菜" : existing?.name ?? "账本");
+  useTitle(creating ? "写一道菜" : (existing?.name ?? "账本"));
 
   useEffect(() => {
     if (!confirm) return;
@@ -37,12 +73,48 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [confirm]);
 
-  const build = (opts?: { requireIngredients?: boolean }): LedgerEntry | null => {
+  useEffect(() => {
+    if (!dirty) return;
+    try {
+      saveLedgerDraft(draftKey, {
+        name,
+        ingredients,
+        notes,
+        image,
+        baseServings,
+        savedAt: Date.now(),
+      });
+      setDraftSaved(true);
+    } catch {
+      setDraftSaved(false);
+    }
+  }, [draftKey, name, ingredients, notes, image, baseServings, dirty]);
+  useEffect(() => {
+    const guard = (event: BeforeUnloadEvent) => {
+      if (dirty && !draftSaved) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [dirty, draftSaved]);
+
+  const build = (opts?: {
+    requireIngredients?: boolean;
+  }): LedgerEntry | null => {
     const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError("请填写菜名");
+    if (!trimmed || trimmed.length > LEDGER_LIMITS.name) {
+      setNameError(trimmed ? "菜名最多300字" : "请填写菜名");
       setIngredientsError(null);
       nameRef.current?.focus();
+      return null;
+    }
+    if (
+      ingredients.length > LEDGER_LIMITS.ingredients ||
+      notes.length > LEDGER_LIMITS.notes
+    ) {
+      setIngredientsError("食材和笔记最多100000字，请缩短后保存");
       return null;
     }
     setNameError(null);
@@ -54,8 +126,9 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
     setIngredientsError(null);
     const now = Date.now();
     return {
-      id: existing?.id ?? crypto.randomUUID(),
+      id: existing?.id ?? newId(),
       name: trimmed,
+      baseServings,
       notes: notes.trim(),
       ingredients: ingredients.trim(),
       image,
@@ -68,7 +141,8 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
     if (!oncePrimary("ledger-save")) return;
     const entry = build();
     if (!entry) return;
-    saveLedger(entry);
+    if (!saveLedger(entry)) return;
+    clearLedgerDraft(draftKey);
     setDirty(false);
     setConfirm(false);
     toast(creating ? "记在账本上了" : "改好了");
@@ -80,8 +154,13 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
 
   const onCancel = () => {
     if (dirty) {
-      toast("未保存的改动已丢弃");
+      toast(
+        draftSaved
+          ? "草稿已保留，下次可继续编辑"
+          : "草稿尚未保存，请留在本页重试",
+      );
     }
+    if (dirty && !draftSaved) return;
     navigate("/ledger");
   };
 
@@ -89,7 +168,8 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
     if (!oncePrimary("ledger-cook")) return;
     const entry = build({ requireIngredients: true });
     if (!entry) return;
-    saveLedger(entry);
+    if (!saveLedger(entry)) return;
+    clearLedgerDraft(draftKey);
     addLedgerToMenu(entry.id);
     setDirty(false);
     toast("记下来了，并放进今晚");
@@ -108,7 +188,9 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
       setDirty(true);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "";
-      toast(reason === "large" ? "这张图还是太大，换一张小一点的" : "这张图读不了");
+      toast(
+        reason === "large" ? "这张图还是太大，换一张小一点的" : "这张图读不了",
+      );
     }
   };
 
@@ -134,16 +216,30 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
   return (
     <div className="page ledger-edit-page">
       <header className="subhead">
-        <button type="button" className="icon-btn" onClick={onCancel} aria-label="返回账本">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onCancel}
+          aria-label="返回账本"
+        >
           <BackIcon />
         </button>
         <div>
           <h1>{creating ? "新的一页" : "改一改"}</h1>
-          <p className="crumb">{creating ? "写进你们的账本" : existing?.name}</p>
+          <p className="crumb">
+            {creating ? "写进你们的账本" : existing?.name}
+          </p>
         </div>
         <ThemeButton />
       </header>
 
+      {dirty ? (
+        <p role="status" className="hint">
+          {draftSaved
+            ? "草稿已保存，可离开后继续编辑"
+            : "草稿暂未保存，请检查存储空间"}
+        </p>
+      ) : null}
       <form
         className="ledger-edit-form"
         onSubmit={(event) => {
@@ -156,6 +252,7 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
             菜名 <em className="field-req">必填</em>
           </span>
           <input
+            maxLength={LEDGER_LIMITS.name}
             ref={nameRef}
             className={nameError ? "title-input is-invalid" : "title-input"}
             value={name}
@@ -182,6 +279,7 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
             食材 <em className="field-hint">一行一样，可选</em>
           </span>
           <textarea
+            maxLength={LEDGER_LIMITS.ingredients}
             ref={ingredientsRef}
             rows={6}
             className={ingredientsError ? "is-invalid" : undefined}
@@ -207,6 +305,7 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
           </span>
           <textarea
             rows={4}
+            maxLength={LEDGER_LIMITS.notes}
             value={notes}
             onChange={(event) => {
               setNotes(event.target.value);
@@ -214,6 +313,23 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
             }}
             placeholder="谁爱吃、上次翻车在哪、盐要少放……"
           />
+        </label>
+        <label className="field">
+          <span>这些食材是几人份？</span>
+          <select
+            aria-label="食谱基准人数"
+            value={baseServings}
+            onChange={(event) => {
+              setBaseServings(Number(event.target.value));
+              setDirty(true);
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <option key={n} value={n}>
+                {n} 人份
+              </option>
+            ))}
+          </select>
         </label>
         <div className="field">
           <span>
@@ -252,11 +368,15 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
           <button type="submit" className="btn-primary block">
             保存
           </button>
-          <button type="button" className="btn-secondary block" onClick={cookTonight}>
+          <button
+            type="button"
+            className="btn-secondary block"
+            onClick={cookTonight}
+          >
             保存并放进今晚
           </button>
           <button type="button" className="btn-ghost block" onClick={onCancel}>
-            取消
+            返回账本（保留草稿）
           </button>
         </div>
       </form>
@@ -283,8 +403,14 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
                     toast("撕掉了", {
                       ms: 7000,
                       undo: () => {
-                        const ok = restoreLedger(snap.entry, snap.wasInMenu, snap.undoToken);
-                        toast(ok ? `已恢复「${snap.entry.name}」` : "撤销已失效");
+                        const ok = restoreLedger(
+                          snap.entry,
+                          snap.wasInMenu,
+                          snap.undoToken,
+                        );
+                        toast(
+                          ok ? `已恢复「${snap.entry.name}」` : "撤销已失效",
+                        );
                       },
                     });
                     navigate("/ledger");
@@ -292,13 +418,21 @@ export function LedgerEditPage({ creating = false }: { creating?: boolean }) {
                 >
                   确认撕掉
                 </button>
-                <button type="button" className="btn-ghost" onClick={() => setConfirm(false)}>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setConfirm(false)}
+                >
                   留下
                 </button>
               </div>
             </>
           ) : (
-            <button type="button" className="linkish danger-link" onClick={() => setConfirm(true)}>
+            <button
+              type="button"
+              className="linkish danger-link"
+              onClick={() => setConfirm(true)}
+            >
               撕掉这页
             </button>
           )}

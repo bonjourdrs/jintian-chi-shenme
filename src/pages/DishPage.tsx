@@ -1,3 +1,11 @@
+import { douyinPlaybackHref, isAndroid } from "../lib/nativeLinks.ts";
+import { newId } from "../lib/id.ts";
+import {
+  loadCookSession,
+  saveCookSession,
+  clearCookSession,
+} from "../lib/cookSession.ts";
+import { Sheet } from "../components/Sheet.tsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { NotFound } from "./NotFound.tsx";
@@ -6,7 +14,15 @@ import { DishCard } from "../components/DishCard.tsx";
 import { BackIcon, HeartIcon } from "../components/Icons.tsx";
 import { RichText } from "../components/RichText.tsx";
 import { ThemeButton } from "../components/ThemeSheet.tsx";
-import { creatorOfVideo, dishById, dishesIn, formatLikesCompact, likesOf, sourcesOf, topVideosOf } from "../data/catalog.ts";
+import {
+  creatorOfVideo,
+  dishById,
+  dishesIn,
+  formatLikesCompact,
+  likesOf,
+  sourcesOf,
+  topVideosOf,
+} from "../data/catalog.ts";
 import { ingredientNote, recipeFor } from "../data/recipes.ts";
 import {
   baseServings,
@@ -22,16 +38,30 @@ import {
 import { dishArt } from "../lib/assets.ts";
 import { hapticAlarm, hapticTap } from "../lib/haptics.ts";
 import { playTimerChime } from "../lib/timerChime.ts";
-import { canSpeak, loadCookSpeak, speakCookStep, stopCookSpeak } from "../lib/cookSpeak.ts";
+import {
+  canSpeak,
+  loadCookSpeak,
+  speakCookStep,
+  stopCookSpeak,
+} from "../lib/cookSpeak.ts";
 import { copyText, hemaSearchTerm, openHema } from "../lib/hema.ts";
 import { buildDishShareText, shareOrCopy } from "../lib/share.ts";
 import { requireOnline } from "../lib/online.ts";
 import { loadIngChecks, toggleIngCheck } from "../lib/ingChecks.ts";
-import { clearStepChecks, firstIncompleteStep, loadStepChecks, toggleStepCheck } from "../lib/stepChecks.ts";
+import {
+  clearStepChecks,
+  firstIncompleteStep,
+  loadStepChecks,
+  toggleStepCheck,
+} from "../lib/stepChecks.ts";
 import { pushRecent } from "../lib/recent.ts";
 import { useTitle } from "../lib/useTitle.ts";
 import { requestCookWakeLock, type WakeLockHandle } from "../lib/wakeLock.ts";
-import { isWakeLockSupported, loadCookWake, saveCookWake } from "../lib/cookWake.ts";
+import {
+  isWakeLockSupported,
+  loadCookWake,
+  saveCookWake,
+} from "../lib/cookWake.ts";
 import { sampleCoverAmbience } from "../lib/coverAmbience.ts";
 import { oncePrimary } from "../lib/primaryGuard.ts";
 import { useApp } from "../state/store.tsx";
@@ -46,12 +76,35 @@ function safeDecode(value: string): string {
 
 export function DishPage() {
   const params = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
   const id = params.id ? safeDecode(params.id) : "";
   const dish = dishById.get(id);
-  const { state, toggleHeart, removeHeart, insertHeartAt, addDishToMenu, removeDishFromMenu, insertDishAtMenu, toast, saveLedger } = useApp();
+  if (!dish)
+    return (
+      <NotFound
+        title="这道菜不在菜单里"
+        hint="可能是链接过期或名字变了，回首页再找找。"
+      />
+    );
+  return <DishDetail key={dish.id} dish={dish} />;
+}
+
+function DishDetail({ dish }: { dish: import("../types.ts").Dish }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const {
+    state,
+    toggleHeart,
+    removeHeart,
+    insertHeartAt,
+    addDishToMenu,
+    removeDishFromMenu,
+    insertDishAtMenu,
+    toast,
+    saveLedger,
+  } = useApp();
   useTitle(dish?.name);
+  const [savedCook, setSavedCook] = useState(() => loadCookSession(dish.id));
+  const [resumePrompt, setResumePrompt] = useState(!!savedCook);
   const [lightbox, setLightbox] = useState(false);
   const [lightboxScale, setLightboxScale] = useState(1);
   const lightboxPinchRef = useRef<{ dist: number; scale: number } | null>(null);
@@ -59,7 +112,9 @@ export function DishPage() {
   const [heartFlash, setHeartFlash] = useState<"add" | "remove" | null>(null);
   const [cookMode, setCookMode] = useState(false);
   const cookSentinelRef = useRef(false);
-  const [activeAnchor, setActiveAnchor] = useState<"video" | "ings" | "steps">("ings");
+  const [activeAnchor, setActiveAnchor] = useState<"video" | "ings" | "steps">(
+    "ings",
+  );
   const [cookWakePref, setCookWakePref] = useState(() => loadCookWake());
   const [heroAmbience, setHeroAmbience] = useState<string | null>(null);
   const [cookStep, setCookStep] = useState(0);
@@ -133,7 +188,6 @@ export function DishPage() {
     return () => window.clearTimeout(id);
   }, [dish, location.hash]);
 
-
   useEffect(() => {
     return () => {
       if (singleTapTimerRef.current != null) {
@@ -151,7 +205,9 @@ export function DishPage() {
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     const wide = window.matchMedia("(min-width: 880px)");
-    const scroller = document.querySelector(".app-scroll") as HTMLElement | null;
+    const scroller = document.querySelector(
+      ".app-scroll",
+    ) as HTMLElement | null;
     if (!scroller) return;
 
     const apply = () => {
@@ -172,7 +228,6 @@ export function DishPage() {
       wide.removeEventListener?.("change", apply);
     };
   }, [dish, coverSrc]);
-
 
   useEffect(() => {
     if (!dish) {
@@ -233,7 +288,8 @@ export function DishPage() {
     else void release();
 
     const onVis = () => {
-      if (document.visibilityState === "visible" && cookMode && cookWakePref) void acquire();
+      if (document.visibilityState === "visible" && cookMode && cookWakePref)
+        void acquire();
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -254,7 +310,6 @@ export function DishPage() {
       cancelled = true;
     };
   }, [coverSrc]);
-
 
   /* Step timer: Date.now deadline (accurate when tab backgrounded); optional Notification if already granted */
   useEffect(() => {
@@ -278,7 +333,10 @@ export function DishPage() {
       const msg = timerStepLabel ? `计时到：${timerStepLabel}` : "计时到了";
       toast(msg, { ms: 5200 });
       try {
-        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        if (
+          typeof Notification !== "undefined" &&
+          Notification.permission === "granted"
+        ) {
           const n = new Notification("今天吃什么 · 计时到了", {
             body: msg,
             tag: "jte-cook-timer",
@@ -319,7 +377,11 @@ export function DishPage() {
   }, [timerEndsAt, timerPausedLeft, timerStepLabel, toast]);
 
   const timerDisplaySecs =
-    timerEndsAt != null ? timerSecsLeft : timerPausedLeft != null ? timerPausedLeft : 0;
+    timerEndsAt != null
+      ? timerSecsLeft
+      : timerPausedLeft != null
+        ? timerPausedLeft
+        : 0;
   const timerActive = timerEndsAt != null || timerPausedLeft != null;
 
   const formatTimer = (secs: number) => {
@@ -411,8 +473,13 @@ export function DishPage() {
     }
     setCookJustDone(true);
     hapticTap();
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const id = window.setTimeout(() => setCookJustDone(false), reduce ? 1400 : 2800);
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const id = window.setTimeout(
+      () => setCookJustDone(false),
+      reduce ? 1400 : 2800,
+    );
     return () => window.clearTimeout(id);
   }, [cookMode, dish?.id, doneSteps.length]);
 
@@ -465,6 +532,33 @@ export function DishPage() {
     };
   }, [lightbox]);
 
+  useEffect(() => {
+    if (!cookMode) return;
+    try {
+      saveCookSession(dish.id, {
+        cookStep,
+        timerEndsAt,
+        timerPausedLeft,
+        timerInitialSecs,
+        timerStepIndex,
+        timerStepLabel,
+        timerPresetMin,
+        savedAt: Date.now(),
+      });
+    } catch {
+      /* Current timer remains active; only recovery is unavailable. */
+    }
+  }, [
+    dish.id,
+    cookMode,
+    cookStep,
+    timerEndsAt,
+    timerPausedLeft,
+    timerInitialSecs,
+    timerStepIndex,
+    timerStepLabel,
+    timerPresetMin,
+  ]);
 
   /* Sticky mini jump · scroll-spy (before any early return — hooks order) */
   useEffect(() => {
@@ -478,14 +572,19 @@ export function DishPage() {
     ];
     const els = ids
       .map((item) => ({ ...item, el: document.getElementById(item.id) }))
-      .filter((item): item is typeof item & { el: HTMLElement } => Boolean(item.el));
+      .filter((item): item is typeof item & { el: HTMLElement } =>
+        Boolean(item.el),
+      );
     if (!els.length) return;
 
     const ratios = new Map<string, number>();
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          ratios.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+          ratios.set(
+            entry.target.id,
+            entry.isIntersecting ? entry.intersectionRatio : 0,
+          );
         }
         let bestKey: "video" | "ings" | "steps" | null = null;
         let bestRatio = 0;
@@ -498,19 +597,21 @@ export function DishPage() {
         }
         if (bestKey) setActiveAnchor(bestKey);
       },
-      { root: root ?? null, rootMargin: "-12% 0px -55% 0px", threshold: [0, 0.15, 0.35, 0.55, 0.75] },
+      {
+        root: root ?? null,
+        rootMargin: "-12% 0px -55% 0px",
+        threshold: [0, 0.15, 0.35, 0.55, 0.75],
+      },
     );
     for (const item of els) io.observe(item.el);
     return () => io.disconnect();
   }, [dish, cookMode]);
 
-  if (!dish) {
-    return <NotFound title="这道菜不在菜单里" hint="可能是链接过期或名字变了，回首页再找找。" />;
-  }
-
   const recipe = recipeFor(dish);
   const cookComplete =
-    cookMode && recipe.steps.length > 0 && doneSteps.length >= recipe.steps.length;
+    cookMode &&
+    recipe.steps.length > 0 &&
+    doneSteps.length >= recipe.steps.length;
 
   /* Hardware back matches in-app: exit cook first, then leave detail. */
   useEffect(() => {
@@ -540,6 +641,7 @@ export function DishPage() {
         }
       }
       cookSentinelRef.current = false;
+      clearCookSession(dish.id);
       setCookMode(false);
     };
     window.addEventListener("popstate", onPop);
@@ -550,7 +652,8 @@ export function DishPage() {
         cookSentinelRef.current = false;
         try {
           const state = window.history.state as { jteCook?: number } | null;
-          if (state && state.jteCook === 1) window.history.replaceState(null, "");
+          if (state && state.jteCook === 1)
+            window.history.replaceState(null, "");
         } catch {
           /* ignore */
         }
@@ -577,39 +680,49 @@ export function DishPage() {
     }
   }, []);
 
-  const exitCook = useCallback((announce = true, force = false) => {
-    if (!cookMode) return;
-    const total = recipe.steps.length;
-    const unfinished = total > 0 && doneSteps.length < total;
-    if (unfinished && !force) {
-      const ok = window.confirm(
-        `还有 ${total - doneSteps.length} 步没勾完，确定退出开做？计时会停掉。`,
-      );
-      if (!ok) return;
-    }
-    releaseCookSideEffects();
-    setCookMode(false);
-    if (!unfinished && total > 0) {
-      clearStepChecks(dish.id);
-      setDoneSteps([]);
-    }
-    if (announce) toast(unfinished ? "已退出开做 · 计时已停" : "已退出开做");
-    if (cookSentinelRef.current) {
-      cookSentinelRef.current = false;
-      try {
-        window.history.back();
-      } catch {
-        /* ignore */
+  const exitCook = useCallback(
+    (announce = true, force = false) => {
+      if (!cookMode) return;
+      const total = recipe.steps.length;
+      const unfinished = total > 0 && doneSteps.length < total;
+      if (unfinished && !force) {
+        const ok = window.confirm(
+          `还有 ${total - doneSteps.length} 步没勾完，确定退出开做？计时会停掉。`,
+        );
+        if (!ok) return;
       }
-    }
-  }, [cookMode, toast, recipe.steps.length, doneSteps.length, releaseCookSideEffects, dish.id]);
+      clearCookSession(dish.id);
+      releaseCookSideEffects();
+      setCookMode(false);
+      if (!unfinished && total > 0) {
+        clearStepChecks(dish.id);
+        setDoneSteps([]);
+      }
+      if (announce) toast(unfinished ? "已退出开做 · 计时已停" : "已退出开做");
+      if (cookSentinelRef.current) {
+        cookSentinelRef.current = false;
+        try {
+          window.history.back();
+        } catch {
+          /* ignore */
+        }
+      }
+    },
+    [
+      cookMode,
+      toast,
+      recipe.steps.length,
+      doneSteps.length,
+      releaseCookSideEffects,
+      dish.id,
+    ],
+  );
 
   useEffect(() => {
     if (cookMode) return;
     /* Leaving cook by any path: stop timer, speak, wake lock */
     releaseCookSideEffects();
   }, [cookMode, releaseCookSideEffects]);
-
 
   const videos = topVideosOf(dish, 3);
   const bestVideo = videos[0];
@@ -647,7 +760,12 @@ export function DishPage() {
   };
 
   const ingredientsText = () =>
-    scaleIngredientsForCopy(dish.name, recipe.ingredients, servings, ingredientNote);
+    scaleIngredientsForCopy(
+      dish.name,
+      recipe.ingredients,
+      servings,
+      ingredientNote,
+    );
 
   const copyIngredients = async () => {
     if (recipe.unparsed || recipe.ingredients.length === 0) {
@@ -669,7 +787,8 @@ export function DishPage() {
         await navigator.share({ title: `${dish.name} · 食材`, text });
         return;
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
       }
     }
     const ok = await copyText(text);
@@ -681,7 +800,9 @@ export function DishPage() {
       toast("这道菜还没有步骤");
       return;
     }
-    const text = recipe.steps.map((step, index) => `${index + 1}. ${step}`).join("\n");
+    const text = recipe.steps
+      .map((step, index) => `${index + 1}. ${step}`)
+      .join("\n");
     const ok = await copyText(text);
     toast(ok ? "步骤已复制" : "没能复制，请手动选择");
   };
@@ -705,7 +826,9 @@ export function DishPage() {
       name: dish.name,
       minutes: recipe.minutes,
       tags: recipe.tags,
-      ingredients: mains.length ? mains : recipe.ingredients.map((item) => item.name),
+      ingredients: mains.length
+        ? mains
+        : recipe.ingredients.map((item) => item.name),
       refined: recipe.fromOverride,
     });
     await shareOrCopy(payload, toast);
@@ -713,7 +836,10 @@ export function DishPage() {
 
   const flashHeart = (mode: "add" | "remove") => {
     setHeartFlash(mode);
-    window.setTimeout(() => setHeartFlash((cur) => (cur === mode ? null : cur)), 560);
+    window.setTimeout(
+      () => setHeartFlash((cur) => (cur === mode ? null : cur)),
+      560,
+    );
   };
 
   /** Double-click / double-tap → lightbox. Want stays on ♥ button (no accidental heart). */
@@ -733,8 +859,52 @@ export function DishPage() {
 
   return (
     <div className={cookMode ? "page dish-page is-cook" : "page dish-page"}>
+      <Sheet
+        open={resumePrompt}
+        title="继续上次的烹饪？"
+        onClose={() => setResumePrompt(false)}
+        compact
+      >
+        <p>已保留上次步骤和计时，恢复后按原截止时间继续。</p>
+        <div className="row-btns">
+          <button
+            className="btn-primary"
+            onClick={() => {
+              if (savedCook) {
+                setCookMode(true);
+                setCookStep(savedCook.cookStep);
+                setTimerEndsAt(savedCook.timerEndsAt);
+                setTimerPausedLeft(savedCook.timerPausedLeft);
+                setTimerInitialSecs(savedCook.timerInitialSecs);
+                setTimerStepIndex(savedCook.timerStepIndex);
+                setTimerStepLabel(savedCook.timerStepLabel);
+                setTimerPresetMin(savedCook.timerPresetMin);
+              }
+              setResumePrompt(false);
+            }}
+          >
+            恢复烹饪和计时
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              clearCookSession(dish.id);
+              setSavedCook(null);
+              setResumePrompt(false);
+            }}
+          >
+            放弃上次进度
+          </button>
+        </div>
+      </Sheet>
+
       <header className="subhead">
-        <button type="button" className="icon-btn" onClick={back} aria-label="返回">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={back}
+          aria-label="返回"
+        >
           <BackIcon />
         </button>
         <Link className="crumb" to={`/c/${encodeURIComponent(dish.category)}`}>
@@ -770,11 +940,22 @@ export function DishPage() {
               aria-label={`双击查看「${dish.name}」大图`}
               title="双击放大封面"
             >
-              <DishArt name={dish.name} category={dish.category} priority lazy={false} />
-              {bestVideo ? <span className="hero-cover-dim" aria-hidden="true" /> : null}
+              <DishArt
+                name={dish.name}
+                category={dish.category}
+                priority
+                lazy={false}
+              />
+              {bestVideo ? (
+                <span className="hero-cover-dim" aria-hidden="true" />
+              ) : null}
               {heartFlash && (
                 <span
-                  className={heartFlash === "remove" ? "hero-heart-flash on-remove" : "hero-heart-flash"}
+                  className={
+                    heartFlash === "remove"
+                      ? "hero-heart-flash on-remove"
+                      : "hero-heart-flash"
+                  }
                   aria-hidden="true"
                 >
                   ♥
@@ -783,14 +964,23 @@ export function DishPage() {
             </button>
           ) : (
             <div className="hero-art" aria-hidden="true">
-              <DishArt name={dish.name} category={dish.category} priority lazy={false} />
+              <DishArt
+                name={dish.name}
+                category={dish.category}
+                priority
+                lazy={false}
+              />
             </div>
           )}
           {bestVideo && coverSrc ? (
             <a
-              className={videoOpened ? "hero-play-affordance is-opened" : "hero-play-affordance"}
-              href={bestVideo.url}
-              target="_blank"
+              className={
+                videoOpened
+                  ? "hero-play-affordance is-opened"
+                  : "hero-play-affordance"
+              }
+              href={douyinPlaybackHref(bestVideo.url)}
+              target={isAndroid() ? undefined : "_blank"}
               rel="noopener noreferrer"
               aria-label="打开抖音教程"
               onClick={(event) => {
@@ -824,8 +1014,14 @@ export function DishPage() {
             if (event.touches.length === 2) {
               const a = event.touches[0]!;
               const b = event.touches[1]!;
-              const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-              lightboxPinchRef.current = { dist: Math.max(1, dist), scale: lightboxScale };
+              const dist = Math.hypot(
+                a.clientX - b.clientX,
+                a.clientY - b.clientY,
+              );
+              lightboxPinchRef.current = {
+                dist: Math.max(1, dist),
+                scale: lightboxScale,
+              };
             }
           }}
           onTouchMove={(event) => {
@@ -833,8 +1029,13 @@ export function DishPage() {
             event.preventDefault();
             const a = event.touches[0]!;
             const b = event.touches[1]!;
-            const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-            const next = lightboxPinchRef.current.scale * (dist / lightboxPinchRef.current.dist);
+            const dist = Math.hypot(
+              a.clientX - b.clientX,
+              a.clientY - b.clientY,
+            );
+            const next =
+              lightboxPinchRef.current.scale *
+              (dist / lightboxPinchRef.current.dist);
             setLightboxScale(Math.min(4, Math.max(1, next)));
           }}
           onTouchEnd={() => {
@@ -871,10 +1072,15 @@ export function DishPage() {
             }}
             draggable={false}
           />
-          <div className="photo-lightbox-caption" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="photo-lightbox-caption"
+            onClick={(event) => event.stopPropagation()}
+          >
             <strong className="photo-lightbox-name">{dish.name}</strong>
             <p className="photo-lightbox-hint" aria-hidden="true">
-              {lightboxScale > 1.05 ? "双击还原 · Esc 关闭" : "滚轮 / 捏合缩放 · 双击关闭"}
+              {lightboxScale > 1.05
+                ? "双击还原 · Esc 关闭"
+                : "滚轮 / 捏合缩放 · 双击关闭"}
             </p>
           </div>
         </div>
@@ -883,14 +1089,18 @@ export function DishPage() {
       <div className="dish-head">
         <h1 className="dish-title">{dish.name}</h1>
         <p className="meta-row">
-          {recipe.fromOverride && <span className="pill refine-pill">精修</span>}
+          {recipe.fromOverride && (
+            <span className="pill refine-pill">精修</span>
+          )}
           <span className="pill">约 {recipe.minutes} 分钟</span>
           {recipe.tags.map((tag) => (
             <span key={tag} className="pill">
               {tag}
             </span>
           ))}
-          {recipe.confidence !== "high" && <span className="pill quiet">时长大概估的</span>}
+          {recipe.confidence !== "high" && (
+            <span className="pill quiet">时长大概估的</span>
+          )}
         </p>
       </div>
 
@@ -907,7 +1117,11 @@ export function DishPage() {
                 toast("已从今晚拿下", {
                   ms: 7000,
                   undo: () => {
-                    const ok = insertDishAtMenu(dish.id, snap.index, snap.undoToken);
+                    const ok = insertDishAtMenu(
+                      dish.id,
+                      snap.index,
+                      snap.undoToken,
+                    );
                     toast(ok ? "已恢复到今晚菜单" : "撤销已失效");
                   },
                 });
@@ -923,7 +1137,9 @@ export function DishPage() {
         </button>
         <button
           type="button"
-          className={liked ? "btn-ghost on-heart cook-keep" : "btn-ghost cook-keep"}
+          className={
+            liked ? "btn-ghost on-heart cook-keep" : "btn-ghost cook-keep"
+          }
           aria-pressed={liked}
           onClick={() => {
             if (liked) {
@@ -951,7 +1167,11 @@ export function DishPage() {
         </button>
         <button
           type="button"
-          className={cookMode ? "btn-ghost cook-toggle is-on cook-keep" : "btn-ghost cook-toggle cook-keep"}
+          className={
+            cookMode
+              ? "btn-ghost cook-toggle is-on cook-keep"
+              : "btn-ghost cook-toggle cook-keep"
+          }
           aria-pressed={cookMode}
           onClick={() => {
             if (cookMode) {
@@ -967,7 +1187,11 @@ export function DishPage() {
         {cookMode ? (
           <button
             type="button"
-            className={cookWakePref ? "btn-ghost cook-wake-toggle is-on cook-keep" : "btn-ghost cook-wake-toggle cook-keep"}
+            className={
+              cookWakePref
+                ? "btn-ghost cook-wake-toggle is-on cook-keep"
+                : "btn-ghost cook-wake-toggle cook-keep"
+            }
             aria-pressed={cookWakePref}
             title={
               isWakeLockSupported()
@@ -993,7 +1217,9 @@ export function DishPage() {
         <div className="more-menu cook-hide">
           <button
             type="button"
-            className={moreOpen ? "btn-ghost more-toggle is-on" : "btn-ghost more-toggle"}
+            className={
+              moreOpen ? "btn-ghost more-toggle is-on" : "btn-ghost more-toggle"
+            }
             aria-expanded={moreOpen}
             aria-haspopup="menu"
             onClick={() => setMoreOpen((v) => !v)}
@@ -1129,7 +1355,7 @@ export function DishPage() {
                     }).format(new Date());
                     const now = Date.now();
                     saveLedger({
-                      id: crypto.randomUUID(),
+                      id: newId(),
                       name: dish.name,
                       notes: `烹饪完成 · ${dateLabel}`,
                       ingredients: recipe.ingredients
@@ -1149,7 +1375,13 @@ export function DishPage() {
             </div>
           ) : null}
           <div className="cook-progress-top">
-            <span className={cookComplete ? "cook-progress-label is-done" : "cook-progress-label"}>
+            <span
+              className={
+                cookComplete
+                  ? "cook-progress-label is-done"
+                  : "cook-progress-label"
+              }
+            >
               <strong className="cook-progress-step">
                 {cookComplete
                   ? "全部完成"
@@ -1187,7 +1419,11 @@ export function DishPage() {
             </div>
           </div>
           {tonightChain ? (
-            <div className="cook-tonight-switch" role="group" aria-label="今晚菜单切换">
+            <div
+              className="cook-tonight-switch"
+              role="group"
+              aria-label="今晚菜单切换"
+            >
               <button
                 type="button"
                 className="btn-ghost cook-nav-btn"
@@ -1220,21 +1456,21 @@ export function DishPage() {
             >
               上一步
             </button>
-                          {loadCookSpeak() && canSpeak() ? (
-                <button
-                  type="button"
-                  className="btn-ghost cook-nav-btn cook-speak-btn"
-                  onClick={() => {
-                    const text = recipe.steps[cookStep] || "";
-                    const ok = speakCookStep(`第 ${cookStep + 1} 步。${text}`);
-                    toast(ok ? "正在读出本步" : "朗读不可用");
-                    hapticTap();
-                  }}
-                  title="用系统语音读出本步（不自动朗读）"
-                >
-                  读出本步
-                </button>
-              ) : null}
+            {loadCookSpeak() && canSpeak() ? (
+              <button
+                type="button"
+                className="btn-ghost cook-nav-btn cook-speak-btn"
+                onClick={() => {
+                  const text = recipe.steps[cookStep] || "";
+                  const ok = speakCookStep(`第 ${cookStep + 1} 步。${text}`);
+                  toast(ok ? "正在读出本步" : "朗读不可用");
+                  hapticTap();
+                }}
+                title="用系统语音读出本步（不自动朗读）"
+              >
+                读出本步
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn-ghost cook-nav-btn cook-copy-one"
@@ -1243,16 +1479,22 @@ export function DishPage() {
             >
               复制本步
             </button>
-<button
+            <button
               type="button"
-              className={doneSteps.includes(cookStep) ? "btn-ghost cook-nav-btn is-step-mark" : "btn-secondary cook-nav-btn"}
+              className={
+                doneSteps.includes(cookStep)
+                  ? "btn-ghost cook-nav-btn is-step-mark"
+                  : "btn-secondary cook-nav-btn"
+              }
               onClick={() => {
                 const wasDone = doneSteps.includes(cookStep);
                 const nextDone = toggleStepCheck(dish.id, cookStep);
                 setDoneSteps(nextDone);
                 hapticTap();
                 if (!wasDone) {
-                  setCookStep(firstIncompleteStep(nextDone, recipe.steps.length));
+                  setCookStep(
+                    firstIncompleteStep(nextDone, recipe.steps.length),
+                  );
                 }
               }}
             >
@@ -1262,7 +1504,9 @@ export function DishPage() {
               type="button"
               className="btn-ghost cook-nav-btn"
               disabled={cookStep >= recipe.steps.length - 1}
-              onClick={() => setCookStep((s) => Math.min(recipe.steps.length - 1, s + 1))}
+              onClick={() =>
+                setCookStep((s) => Math.min(recipe.steps.length - 1, s + 1))
+              }
             >
               {cookStep >= recipe.steps.length - 1 ? "最后一步" : "下一步"}
             </button>
@@ -1278,16 +1522,31 @@ export function DishPage() {
           <p className="hint cook-wake-hint cook-keep" role="note">
             屏幕常亮已尽量开启 · 勾选步骤只记在本机
           </p>
-          <div className={timerDonePulse ? "cook-timer is-done-pulse" : "cook-timer"}>
+          <div
+            className={
+              timerDonePulse ? "cook-timer is-done-pulse" : "cook-timer"
+            }
+          >
             {timerActive ? (
               <div
-                className={timerPausedLeft != null ? "cook-timer-running is-paused" : "cook-timer-running"}
+                className={
+                  timerPausedLeft != null
+                    ? "cook-timer-running is-paused"
+                    : "cook-timer-running"
+                }
                 role="timer"
                 aria-live="polite"
-                aria-label={timerPausedLeft != null ? "计时已暂停" : "计时进行中"}
+                aria-label={
+                  timerPausedLeft != null ? "计时已暂停" : "计时进行中"
+                }
               >
-                <strong className="cook-timer-digits">{formatTimer(timerDisplaySecs)}</strong>
-                <span className="cook-timer-label">{timerStepLabel || (timerPausedLeft != null ? "已暂停" : "计时中")}</span>
+                <strong className="cook-timer-digits">
+                  {formatTimer(timerDisplaySecs)}
+                </strong>
+                <span className="cook-timer-label">
+                  {timerStepLabel ||
+                    (timerPausedLeft != null ? "已暂停" : "计时中")}
+                </span>
                 {timerPresetMin != null ? (
                   <span className="cook-timer-preset" title="当前预设">
                     预设 {timerPresetMin} 分钟
@@ -1296,18 +1555,34 @@ export function DishPage() {
                 ) : null}
                 <div className="cook-timer-actions">
                   {timerEndsAt != null ? (
-                    <button type="button" className="btn-secondary compact" onClick={pauseTimer}>
+                    <button
+                      type="button"
+                      className="btn-secondary compact"
+                      onClick={pauseTimer}
+                    >
                       暂停
                     </button>
                   ) : (
-                    <button type="button" className="btn-secondary compact" onClick={resumeTimer}>
+                    <button
+                      type="button"
+                      className="btn-secondary compact"
+                      onClick={resumeTimer}
+                    >
                       继续
                     </button>
                   )}
-                  <button type="button" className="btn-ghost compact" onClick={resetTimer}>
+                  <button
+                    type="button"
+                    className="btn-ghost compact"
+                    onClick={resetTimer}
+                  >
                     重置
                   </button>
-                  <button type="button" className="btn-ghost compact" onClick={clearTimer}>
+                  <button
+                    type="button"
+                    className="btn-ghost compact"
+                    onClick={clearTimer}
+                  >
                     取消
                   </button>
                 </div>
@@ -1316,14 +1591,20 @@ export function DishPage() {
               <>
                 <button
                   type="button"
-                  className={timerOpen ? "btn-secondary compact" : "btn-ghost compact"}
+                  className={
+                    timerOpen ? "btn-secondary compact" : "btn-ghost compact"
+                  }
                   aria-expanded={timerOpen}
                   onClick={() => setTimerOpen((v) => !v)}
                 >
                   {timerOpen ? "收起计时" : "计时"}
                 </button>
                 {timerOpen && (
-                  <div className="cook-timer-picks" role="group" aria-label="快捷计时">
+                  <div
+                    className="cook-timer-picks"
+                    role="group"
+                    aria-label="快捷计时"
+                  >
                     {[1, 3, 5, 10].map((m) => (
                       <button
                         key={m}
@@ -1348,12 +1629,16 @@ export function DishPage() {
                       <button
                         type="button"
                         className={
-                          timerPresetMin != null && ![1, 3, 5, 10].includes(timerPresetMin)
+                          timerPresetMin != null &&
+                          ![1, 3, 5, 10].includes(timerPresetMin)
                             ? "chip on"
                             : "chip"
                         }
                         onClick={() => {
-                          const m = Math.max(1, Math.min(180, Math.round(Number(timerCustom) || 0)));
+                          const m = Math.max(
+                            1,
+                            Math.min(180, Math.round(Number(timerCustom) || 0)),
+                          );
                           if (!Number.isFinite(m) || m < 1) {
                             toast("填 1–180 分钟");
                             return;
@@ -1373,15 +1658,20 @@ export function DishPage() {
         </div>
       )}
 
-
       {!cookMode && (
         <nav className="dish-jump" aria-label="详情跳转">
           {bestVideo ? (
             <button
               type="button"
-              className={activeAnchor === "video" ? "dish-jump-btn is-on" : "dish-jump-btn"}
+              className={
+                activeAnchor === "video"
+                  ? "dish-jump-btn is-on"
+                  : "dish-jump-btn"
+              }
               onClick={() => {
-                document.getElementById("dish-anchor-video")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                document
+                  .getElementById("dish-anchor-video")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 setActiveAnchor("video");
               }}
             >
@@ -1390,9 +1680,13 @@ export function DishPage() {
           ) : null}
           <button
             type="button"
-            className={activeAnchor === "ings" ? "dish-jump-btn is-on" : "dish-jump-btn"}
+            className={
+              activeAnchor === "ings" ? "dish-jump-btn is-on" : "dish-jump-btn"
+            }
             onClick={() => {
-              document.getElementById("dish-anchor-ings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              document
+                .getElementById("dish-anchor-ings")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
               setActiveAnchor("ings");
             }}
           >
@@ -1400,9 +1694,13 @@ export function DishPage() {
           </button>
           <button
             type="button"
-            className={activeAnchor === "steps" ? "dish-jump-btn is-on" : "dish-jump-btn"}
+            className={
+              activeAnchor === "steps" ? "dish-jump-btn is-on" : "dish-jump-btn"
+            }
             onClick={() => {
-              document.getElementById("dish-anchor-steps")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              document
+                .getElementById("dish-anchor-steps")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
               setActiveAnchor("steps");
             }}
           >
@@ -1412,7 +1710,11 @@ export function DishPage() {
       )}
 
       {bestVideo && (
-        <section id="dish-anchor-video" className="video-block" aria-label="教程视频">
+        <section
+          id="dish-anchor-video"
+          className="video-block"
+          aria-label="教程视频"
+        >
           <p className="video-block-label">抖音教程</p>
           <a
             className={[
@@ -1422,8 +1724,8 @@ export function DishPage() {
             ]
               .filter(Boolean)
               .join(" ")}
-            href={bestVideo.url}
-            target="_blank"
+            href={douyinPlaybackHref(bestVideo.url)}
+            target={isAndroid() ? undefined : "_blank"}
             rel="noopener noreferrer"
             onClick={(event) => {
               if (!requireOnline(toast)) {
@@ -1447,15 +1749,29 @@ export function DishPage() {
               </span>
             )}
             <span className="video-hero-body">
-              <strong>看完整教程</strong>
+              <strong>{isAndroid() ? "在抖音 App 播放" : "看完整教程"}</strong>
               <em>
                 {bestCreator ? `${bestCreator} · ` : ""}
-                {(() => { const raw = bestVideo.likes || ""; const n = raw.includes("万") ? Number.parseFloat(raw) * 10000 : Number.parseFloat(raw); const c = formatLikesCompact(Number.isFinite(n) ? n : 0, raw); return c ? `${c}赞 · ` : ""; })()}
+                {(() => {
+                  const raw = bestVideo.likes || "";
+                  const n = raw.includes("万")
+                    ? Number.parseFloat(raw) * 10000
+                    : Number.parseFloat(raw);
+                  const c = formatLikesCompact(Number.isFinite(n) ? n : 0, raw);
+                  return c ? `${c}赞 · ` : "";
+                })()}
                 {bestVideo.title || dish.name}
               </em>
             </span>
           </a>
 
+          <p className="hint">
+            手机点击优先打开抖音；未能唤起时，可{" "}
+            <a href={bestVideo.url} target="_blank" rel="noopener noreferrer">
+              用网页观看
+            </a>
+            ，或 <a href="app-check.html">测试手机打开方式</a>。
+          </p>
           {moreVideos.length > 0 && (
             <ul className="video-list compact">
               {moreVideos.map((video) => {
@@ -1464,8 +1780,8 @@ export function DishPage() {
                   <li key={video.url}>
                     <a
                       className="video-link video-link-secondary"
-                      href={video.url}
-                      target="_blank"
+                      href={douyinPlaybackHref(video.url)}
+                      target={isAndroid() ? undefined : "_blank"}
                       rel="noopener noreferrer"
                       onClick={(event) => {
                         if (!requireOnline(toast)) event.preventDefault();
@@ -1477,7 +1793,17 @@ export function DishPage() {
                       <span>
                         <strong>
                           {creator}
-                          {(() => { const raw = video.likes || ""; const n = raw.includes("万") ? Number.parseFloat(raw) * 10000 : Number.parseFloat(raw); const c = formatLikesCompact(Number.isFinite(n) ? n : 0, raw); return c ? ` · ${c}赞` : ""; })()}
+                          {(() => {
+                            const raw = video.likes || "";
+                            const n = raw.includes("万")
+                              ? Number.parseFloat(raw) * 10000
+                              : Number.parseFloat(raw);
+                            const c = formatLikesCompact(
+                              Number.isFinite(n) ? n : 0,
+                              raw,
+                            );
+                            return c ? ` · ${c}赞` : "";
+                          })()}
                         </strong>
                         <em>{video.title || dish.name}</em>
                       </span>
@@ -1488,15 +1814,23 @@ export function DishPage() {
             </ul>
           )}
           {videos.length >= 3 && (
-            <p className="hint video-more-hint">按点赞挑了前三；点开会去抖音看完整教程。</p>
+            <p className="hint video-more-hint">
+              按点赞挑了前三；安卓手机点击优先在抖音 App 播放。
+            </p>
           )}
         </section>
       )}
 
       {showConfidenceNote && (
-        <aside className={recipe.unparsed ? "template-note soft" : "template-note whisper"}>
+        <aside
+          className={
+            recipe.unparsed ? "template-note soft" : "template-note whisper"
+          }
+        >
           {recipe.unparsed ? (
-            <p>主料还对不太准，先看上面的视频再决定买什么；做顺了就抄进账本。</p>
+            <p>
+              主料还对不太准，先看上面的视频再决定买什么；做顺了就抄进账本。
+            </p>
           ) : (
             <p>步骤按家常写法整理过，火候和份量仍以视频为准。</p>
           )}
@@ -1504,210 +1838,273 @@ export function DishPage() {
       )}
 
       <div className="dish-recipe-split">
-        <section id="dish-anchor-ings" className="dish-body-ings" aria-label="食材">
-        <div className="block-head">
-          <h2 className="block-title">食材</h2>
-          {/* 复制/分享食材 → 上方「更多」，主路径留给勾选与盒马搜 */}
-        </div>
-        <p className="print-servings" aria-hidden="true">
-          按 {servings} 人
-          {servings !== baseServings() ? " · 用量已按人数缩放（仅展示）" : " · 默认两人份心估"}
-        </p>
-        {!recipe.unparsed && recipe.ingredients.length > 0 && (
-          <div className="servings-bar" role="group" aria-label="按几人估算用量">
-            <span className="servings-label">按几人</span>
-            <button
-              type="button"
-              className="icon-btn servings-btn"
-              aria-label="减少人数"
-              disabled={servings <= MIN_SERVINGS}
-              onClick={() => {
-                setServings((n) => {
-                  const next = clampServings(n - 1);
-                  if (next !== n) {
-                    setServingsPulse(true);
-                    window.setTimeout(() => setServingsPulse(false), 320);
-                    if (dish) saveServingsForDish(dish.id, next);
-                  }
-                  return next;
-                });
-                hapticTap();
-              }}
-            >
-              −
-            </button>
-            <strong className="servings-value" aria-live="polite">
-              <span className="servings-n">{servings}</span>
-              <span className="servings-unit">人</span>
-            </strong>
-            <button
-              type="button"
-              className="icon-btn servings-btn"
-              aria-label="增加人数"
-              disabled={servings >= MAX_SERVINGS}
-              onClick={() => {
-                setServings((n) => {
-                  const next = clampServings(n + 1);
-                  if (next !== n) {
-                    setServingsPulse(true);
-                    window.setTimeout(() => setServingsPulse(false), 320);
-                    if (dish) saveServingsForDish(dish.id, next);
-                  }
-                  return next;
-                });
-                hapticTap();
-              }}
-            >
-              +
-            </button>
-            <span className="servings-hint">按 {servings} 人 · 用量仅展示缩放，不改菜谱底稿</span>
+        <section
+          id="dish-anchor-ings"
+          className="dish-body-ings"
+          aria-label="食材"
+        >
+          <div className="block-head">
+            <h2 className="block-title">食材</h2>
+            {/* 复制/分享食材 → 上方「更多」，主路径留给勾选与盒马搜 */}
           </div>
-        )}
-        {recipe.unparsed ? (
-          <p className="hint">主料待对照视频。先看抖音再决定买什么。</p>
-        ) : (
-          <ul className={servingsPulse ? "ing-list is-servings-pulse" : "ing-list"}>
-            {recipe.ingredients.map((ingredient) => {
-              const checked = checkedNames.includes(ingredient.name);
-              const displayName = scaleAmountText(ingredient.name, servings);
-              const displayNote = scaleIngredientNote(ingredientNote(ingredient), servings);
-              const scaled = servings !== baseServings();
+          <p className="print-servings" aria-hidden="true">
+            按 {servings} 人
+            {servings !== baseServings()
+              ? " · 用量已按人数缩放（仅展示）"
+              : " · 默认两人份心估"}
+          </p>
+          {!recipe.unparsed && recipe.ingredients.length > 0 && (
+            <div
+              className="servings-bar"
+              role="group"
+              aria-label="按几人估算用量"
+            >
+              <span className="servings-label">按几人</span>
+              <button
+                type="button"
+                className="icon-btn servings-btn"
+                aria-label="减少人数"
+                disabled={servings <= MIN_SERVINGS}
+                onClick={() => {
+                  setServings((n) => {
+                    const next = clampServings(n - 1);
+                    if (next !== n) {
+                      setServingsPulse(true);
+                      window.setTimeout(() => setServingsPulse(false), 320);
+                      if (dish) saveServingsForDish(dish.id, next);
+                    }
+                    return next;
+                  });
+                  hapticTap();
+                }}
+              >
+                −
+              </button>
+              <strong className="servings-value" aria-live="polite">
+                <span className="servings-n">{servings}</span>
+                <span className="servings-unit">人</span>
+              </strong>
+              <button
+                type="button"
+                className="icon-btn servings-btn"
+                aria-label="增加人数"
+                disabled={servings >= MAX_SERVINGS}
+                onClick={() => {
+                  setServings((n) => {
+                    const next = clampServings(n + 1);
+                    if (next !== n) {
+                      setServingsPulse(true);
+                      window.setTimeout(() => setServingsPulse(false), 320);
+                      if (dish) saveServingsForDish(dish.id, next);
+                    }
+                    return next;
+                  });
+                  hapticTap();
+                }}
+              >
+                +
+              </button>
+              <span className="servings-hint">
+                按 {servings} 人 · 用量仅展示缩放，不改菜谱底稿
+              </span>
+            </div>
+          )}
+          {recipe.unparsed ? (
+            <p className="hint">主料待对照视频。先看抖音再决定买什么。</p>
+          ) : (
+            <ul
+              className={
+                servingsPulse ? "ing-list is-servings-pulse" : "ing-list"
+              }
+            >
+              {recipe.ingredients.map((ingredient) => {
+                const checked = checkedNames.includes(ingredient.name);
+                const displayName = scaleAmountText(ingredient.name, servings);
+                const displayNote = scaleIngredientNote(
+                  ingredientNote(ingredient),
+                  servings,
+                );
+                const scaled = servings !== baseServings();
+                return (
+                  <li
+                    key={ingredient.name}
+                    className={checked ? "ing-item is-checked" : "ing-item"}
+                  >
+                    <label className={checked ? "ing-row is-on" : "ing-row"}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setCheckedNames(
+                            toggleIngCheck(dish.id, ingredient.name),
+                          );
+                          hapticTap();
+                        }}
+                      />
+                      <span
+                        className={scaled ? "ing-name is-scaled" : "ing-name"}
+                      >
+                        {displayName}
+                      </span>
+                      <span className="ing-note">{displayNote}</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="hema-btn"
+                      onClick={() =>
+                        openHema(ingredient.name, state.hemaTemplate, toast)
+                      }
+                      title={`复制并打开盒马搜索「${hemaSearchTerm(ingredient.name) || ingredient.name}」· 不是一键加购`}
+                      aria-label={`打开盒马「${hemaSearchTerm(ingredient.name) || ingredient.name}」，仅搜索不是加购`}
+                    >
+                      <span className="hema-btn-main">打开盒马</span>
+                      <span className="hema-btn-q">
+                        需搜索「
+                        {hemaSearchTerm(ingredient.name) || ingredient.name}」
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="hint hema-honest-hint">
+            勾过表示这道菜你已经备好，只记在本机，刷新同菜还在；不会进情侣同步，也不会改采购清单。
+            <strong>「打开盒马」</strong>
+            会准备食材名并打开盒马
+            App。目前需在盒马搜索框粘贴，再选择商品和数量；微信内会提示在手机浏览器中打开。
+          </p>
+        </section>
+        <section
+          id="dish-anchor-steps"
+          className="dish-body-steps"
+          aria-label="做法"
+        >
+          <div className="block-head">
+            <h2 className="block-title">做法</h2>
+            {/* 复制步骤 → 「更多」；开做时底部坞仍可复制 */}
+          </div>
+          <ol className="steps">
+            {recipe.steps.map((step, index) => {
+              const stepDone = doneSteps.includes(index);
+              const current = cookMode && index === cookStep;
               return (
-                <li key={ingredient.name} className={checked ? "ing-item is-checked" : "ing-item"}>
-                  <label className={checked ? "ing-row is-on" : "ing-row"}>
+                <li
+                  key={`${index}-${step.slice(0, 12)}`}
+                  ref={(el) => {
+                    stepRefs.current[index] = el;
+                  }}
+                  className={
+                    [
+                      current ? "is-current" : "",
+                      stepDone ? "is-step-done" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
+                >
+                  <label className="step-check">
                     <input
                       type="checkbox"
-                      checked={checked}
+                      checked={stepDone}
+                      aria-label={
+                        stepDone
+                          ? `第 ${index + 1} 步已完成，点按取消`
+                          : `第 ${index + 1} 步未完成，点按勾选`
+                      }
                       onChange={() => {
-                        setCheckedNames(toggleIngCheck(dish.id, ingredient.name));
+                        const nextDone = toggleStepCheck(dish.id, index);
+                        setDoneSteps(nextDone);
                         hapticTap();
+                        if (cookMode && !stepDone) {
+                          setCookStep(
+                            firstIncompleteStep(nextDone, recipe.steps.length),
+                          );
+                        } else if (cookMode) {
+                          setCookStep(index);
+                        }
                       }}
                     />
-                    <span className={scaled ? "ing-name is-scaled" : "ing-name"}>{displayName}</span>
-                    <span className="ing-note">{displayNote}</span>
+                    <span className="num" aria-hidden="true">
+                      {index + 1}
+                    </span>
                   </label>
-                  <button
-                    type="button"
-                    className="hema-btn"
-                    onClick={() => openHema(ingredient.name, state.hemaTemplate, toast)}
-                    title={`复制并打开盒马搜索「${hemaSearchTerm(ingredient.name) || ingredient.name}」· 不是一键加购`}
-                    aria-label={`在盒马搜「${hemaSearchTerm(ingredient.name) || ingredient.name}」，仅搜索不是加购`}
-                  >
-                    <span className="hema-btn-main">在盒马搜</span>
-                    <span className="hema-btn-q">搜「{hemaSearchTerm(ingredient.name) || ingredient.name}」</span>
-                  </button>
+                  <div className="step-main">
+                    <p
+                      onClick={cookMode ? () => setCookStep(index) : undefined}
+                      className={
+                        cookMode ? "step-body is-tappable" : "step-body"
+                      }
+                    >
+                      <RichText text={step} />
+                    </p>
+                    <div className="step-tools">
+                      <button
+                        type="button"
+                        className="step-copy-btn"
+                        aria-label={`复制第 ${index + 1} 步`}
+                        title="复制这一步"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void copyOneStep(index);
+                        }}
+                      >
+                        复制
+                      </button>
+                      {cookMode && (
+                        <button
+                          type="button"
+                          className={[
+                            "step-timer-btn",
+                            timerActive && timerStepIndex === index
+                              ? "is-active"
+                              : "",
+                            timerPausedLeft != null && timerStepIndex === index
+                              ? "is-paused"
+                              : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          aria-label={
+                            timerActive && timerStepIndex === index
+                              ? `第 ${index + 1} 步计时 ${formatTimer(timerDisplaySecs)}`
+                              : `为第 ${index + 1} 步计时`
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setCookStep(index);
+                            if (timerActive && timerStepIndex === index) {
+                              /* Focus dock controls; don't steal checklist taps */
+                              setTimerOpen(false);
+                              document
+                                .querySelector(".cook-timer")
+                                ?.scrollIntoView({
+                                  block: "nearest",
+                                  behavior: "smooth",
+                                });
+                            } else {
+                              setTimerOpen(true);
+                              /* Quick-start 3 min for this step if idle */
+                              if (!timerActive) {
+                                /* open picks only — user chooses duration */
+                              }
+                            }
+                            hapticTap();
+                          }}
+                        >
+                          {timerActive && timerStepIndex === index
+                            ? formatTimer(timerDisplaySecs)
+                            : "计时"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </li>
               );
             })}
-          </ul>
-        )}
-        <p className="hint hema-honest-hint">勾过表示这道菜你已经备好，只记在本机，刷新同菜还在；不会进情侣同步，也不会改采购清单。<strong>「在盒马搜」</strong>会复制关键词并打开搜索页（顺带试一次唤起 App）——只是搜索/深链，没有公开加购接口，不会假装放进购物车；唤不起就打开盒马 App 粘贴最省事。</p>
-        </section>
-        <section id="dish-anchor-steps" className="dish-body-steps" aria-label="做法">
-        <div className="block-head">
-          <h2 className="block-title">做法</h2>
-          {/* 复制步骤 → 「更多」；开做时底部坞仍可复制 */}
-        </div>
-        <ol className="steps">
-          {recipe.steps.map((step, index) => {
-            const stepDone = doneSteps.includes(index);
-            const current = cookMode && index === cookStep;
-            return (
-              <li
-                key={`${index}-${step.slice(0, 12)}`}
-                ref={(el) => {
-                  stepRefs.current[index] = el;
-                }}
-                className={[current ? "is-current" : "", stepDone ? "is-step-done" : ""]
-                  .filter(Boolean)
-                  .join(" ") || undefined}
-              >
-                <label className="step-check">
-                  <input
-                    type="checkbox"
-                    checked={stepDone}
-                    aria-label={stepDone ? `第 ${index + 1} 步已完成，点按取消` : `第 ${index + 1} 步未完成，点按勾选`}
-                    onChange={() => {
-                      const nextDone = toggleStepCheck(dish.id, index);
-                      setDoneSteps(nextDone);
-                      hapticTap();
-                      if (cookMode && !stepDone) {
-                        setCookStep(firstIncompleteStep(nextDone, recipe.steps.length));
-                      } else if (cookMode) {
-                        setCookStep(index);
-                      }
-                    }}
-                  />
-                  <span className="num" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                </label>
-                <div className="step-main">
-                  <p
-                    onClick={cookMode ? () => setCookStep(index) : undefined}
-                    className={cookMode ? "step-body is-tappable" : "step-body"}
-                  >
-                    <RichText text={step} />
-                  </p>
-                  <div className="step-tools">
-                  <button
-                    type="button"
-                    className="step-copy-btn"
-                    aria-label={`复制第 ${index + 1} 步`}
-                    title="复制这一步"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void copyOneStep(index);
-                    }}
-                  >
-                    复制
-                  </button>
-                  {cookMode && (
-                    <button
-                      type="button"
-                      className={[
-                        "step-timer-btn",
-                        timerActive && timerStepIndex === index ? "is-active" : "",
-                        timerPausedLeft != null && timerStepIndex === index ? "is-paused" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      aria-label={
-                        timerActive && timerStepIndex === index
-                          ? `第 ${index + 1} 步计时 ${formatTimer(timerDisplaySecs)}`
-                          : `为第 ${index + 1} 步计时`
-                      }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setCookStep(index);
-                        if (timerActive && timerStepIndex === index) {
-                          /* Focus dock controls; don't steal checklist taps */
-                          setTimerOpen(false);
-                          document.querySelector(".cook-timer")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-                        } else {
-                          setTimerOpen(true);
-                          /* Quick-start 3 min for this step if idle */
-                          if (!timerActive) {
-                            /* open picks only — user chooses duration */
-                          }
-                        }
-                        hapticTap();
-                      }}
-                    >
-                      {timerActive && timerStepIndex === index
-                        ? formatTimer(timerDisplaySecs)
-                        : "计时"}
-                    </button>
-                  )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+          </ol>
         </section>
       </div>
-
 
       {(() => {
         const related = dishesIn(dish.category)
@@ -1728,7 +2125,10 @@ export function DishPage() {
       })()}
 
       {formatLikesCompact(likes.n, likes.label) && videos.length > 0 && (
-        <p className="hint">样例里最高大约 {formatLikesCompact(likes.n, likes.label)}赞。有的片子是合集，以标题为准。</p>
+        <p className="hint">
+          样例里最高大约 {formatLikesCompact(likes.n, likes.label)}
+          赞。有的片子是合集，以标题为准。
+        </p>
       )}
     </div>
   );

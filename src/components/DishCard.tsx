@@ -1,6 +1,12 @@
 import { memo, useRef, useState, type PointerEvent as PtrEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { categories, formatLikesCompact, likesOf, sourcesOf, videosOf } from "../data/catalog.ts";
+import {
+  categories,
+  formatLikesCompact,
+  likesOf,
+  sourcesOf,
+  videosOf,
+} from "../data/catalog.ts";
 import { recipeFor } from "../data/recipes.ts";
 import type { Dish } from "../types.ts";
 import { dishArt } from "../lib/assets.ts";
@@ -183,13 +189,20 @@ function DishCardInner({
       onContextMenu={(event) => event.preventDefault()}
     >
       {selectMode ? (
-        <label className="dish-select-check" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+        <label
+          className="dish-select-check"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <input
             type="checkbox"
             checked={selected}
             aria-label={`选择 ${dish.name}`}
             onChange={(event) => {
-              onToggleSelect?.(dish.id, (event.nativeEvent as MouseEvent).shiftKey);
+              onToggleSelect?.(
+                dish.id,
+                (event.nativeEvent as MouseEvent).shiftKey,
+              );
             }}
             onClick={(event) => {
               if (event.shiftKey) {
@@ -253,18 +266,18 @@ function DishCardInner({
             .filter(Boolean)
             .join(" ")}
         >
-          <DishArt name={dish.name} category={dish.category} priority={priority} lazy={!priority} />
+          <DishArt
+            name={dish.name}
+            category={dish.category}
+            priority={priority}
+            lazy={!priority}
+          />
           {hasVideo ? <span className="cover-dim" aria-hidden="true" /> : null}
-          {recipe.fromOverride && (
-            <span className="refine-badge" title="精修菜谱">
-              精
-            </span>
-          )}
           {hasVideo ? (
             <button
               type="button"
               className="play-badge is-button"
-              title="查看视频教程"
+              title="查看外部教程"
               aria-label={`查看「${dish.name}」的视频教程`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
@@ -278,37 +291,17 @@ function DishCardInner({
                 navigate(`/d/${encodeURIComponent(dish.id)}#dish-anchor-video`);
               }}
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 7l8 5-8 5z" />
-              </svg>
+              <span>教程 ↗</span>
             </button>
-          ) : null}
-          {credit ? (
-            <span className="cover-credit" title={credit}>
-              {credit}
-            </span>
           ) : null}
         </div>
         <div className="card-body">
           <h3 title={dish.name}>{highlightName(dish.name, highlight)}</h3>
           <p className="card-meta">
-            {recipe.fromOverride && (
-              <span className="meta-refine" title="精修菜谱">
-                精
-              </span>
-            )}
             <span className="meta-cat" title={dish.category}>
               {short}
             </span>
             <span className="meta-rest">
-              {likesText ? (
-                <>
-                  <span className="meta-sep" aria-hidden="true">
-                    ·
-                  </span>
-                  <span className="meta-likes">{likesText}</span>
-                </>
-              ) : null}
               <span className="meta-sep" aria-hidden="true">
                 ·
               </span>

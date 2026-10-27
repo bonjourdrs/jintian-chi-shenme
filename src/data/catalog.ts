@@ -1,3 +1,4 @@
+import { recipeFor, canonicalizeIngredientName } from "./recipes.ts";
 import raw from "./seed.json" with { type: "json" };
 import dishSources from "./dishSources.json" with { type: "json" };
 import dishCovers from "./dishCovers.json" with { type: "json" };
@@ -74,12 +75,15 @@ export function dishesIn(category: string): Dish[] {
   return dishes.filter((dish) => dish.category === category);
 }
 
+let ingredientIndex: Map<string, string[]> | undefined;
 export function searchDishes(query: string): Dish[] {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return [];
-  return dishes.filter(
-    (dish) => dish.name.toLowerCase().includes(needle) || dish.category.toLowerCase().includes(needle),
-  );
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  ingredientIndex ??= new Map(dishes.map(dish => [dish.id, recipeFor(dish).ingredients.map(item => canonicalizeIngredientName(item.name).toLowerCase())]));
+  return dishes.filter(dish => tokens.every(token => {
+    const alias = canonicalizeIngredientName(token);
+    return dish.name.toLowerCase().includes(token) || dish.category.includes(token) || ingredientIndex!.get(dish.id)!.some(name => name.includes(token) || name.includes(alias));
+  })).sort((a, b) => Number(b.name.includes(query.trim())) - Number(a.name.includes(query.trim())));
 }
 
 export function likesOf(dish: Dish): { n: number; label: string } {

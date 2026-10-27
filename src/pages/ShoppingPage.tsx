@@ -1,6 +1,10 @@
+import { hemaLaunchHref } from "../lib/nativeLinks.ts";
 import { useMemo, useState } from "react";
+import { Sheet } from "../components/Sheet.tsx";
+import { canonicalizeIngredientName } from "../data/recipes.ts";
+import { splitIngredientLabel } from "../lib/amounts.ts";
 import { BasketArt } from "../components/Art.tsx";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { dishById } from "../data/catalog.ts";
 import {
   copyHemaKeywords,
@@ -8,10 +12,19 @@ import {
   hemaKeywords,
   hemaSearchTerm,
   openHema,
+  openHemaShare,
 } from "../lib/hema.ts";
 import { isOnline } from "../lib/online.ts";
-import { buildShopping, buildShoppingByDish, shoppingText } from "../lib/shopping.ts";
-import { loadShopGroupMode, saveShopGroupMode, type ShopGroupMode } from "../lib/shopMode.ts";
+import {
+  buildShopping,
+  buildShoppingByDish,
+  shoppingText,
+} from "../lib/shopping.ts";
+import {
+  loadShopGroupMode,
+  saveShopGroupMode,
+  type ShopGroupMode,
+} from "../lib/shopMode.ts";
 import { loadHideBought, saveHideBought } from "../lib/shopHideBought.ts";
 import { oncePrimary } from "../lib/primaryGuard.ts";
 import { hapticTap } from "../lib/haptics.ts";
@@ -21,6 +34,7 @@ import type { ShopItem } from "../lib/shopping.ts";
 
 export function ShoppingPage() {
   useTitle("采购清单");
+  const [params] = useSearchParams();
   const {
     state,
     toggleBought,
@@ -36,10 +50,40 @@ export function ShoppingPage() {
     toast,
   } = useApp();
   const [draft, setDraft] = useState("");
+  const [productShare, setProductShare] = useState(
+    () =>
+      params.get("hemaShare")?.slice(0, 4000) ??
+      localStorage.getItem("jte.hema.productShare") ??
+      "",
+  );
+  const [duplicate, setDuplicate] = useState("");
+  const commitExtra = (name: string, mode: "add" | "replace" = "add") => {
+    if (!addExtra(name, mode)) return;
+    setDraft("");
+    setDuplicate("");
+    toast(mode === "replace" ? "已替换同名临时项" : "已追加临时项（仅本机）");
+    hapticTap();
+  };
+  const submitExtra = () => {
+    const name = draft.trim();
+    if (!name) return;
+    const key = canonicalizeIngredientName(splitIngredientLabel(name).base);
+    if (
+      state.extras.some(
+        (extra) =>
+          canonicalizeIngredientName(splitIngredientLabel(extra.name).base) ===
+          key,
+      )
+    )
+      setDuplicate(name);
+    else commitExtra(name);
+  };
   const [hemaIndex, setHemaIndex] = useState(0);
   const [hemaActive, setHemaActive] = useState(false);
   const [hideBought, setHideBought] = useState(() => loadHideBought());
-  const [groupMode, setGroupMode] = useState<ShopGroupMode>(() => loadShopGroupMode());
+  const [groupMode, setGroupMode] = useState<ShopGroupMode>(() =>
+    loadShopGroupMode(),
+  );
 
   const pickGroupMode = (mode: ShopGroupMode) => {
     setGroupMode(mode);
@@ -57,7 +101,13 @@ export function ShoppingPage() {
       extras: state.extras,
       bought: state.bought,
     });
-  }, [state.bought, state.extras, state.ledger, state.menuDishIds, state.menuLedgerIds]);
+  }, [
+    state.bought,
+    state.extras,
+    state.ledger,
+    state.menuDishIds,
+    state.menuLedgerIds,
+  ]);
 
   const byDish = useMemo(() => {
     const menuDishes = state.menuDishIds
@@ -70,7 +120,13 @@ export function ShoppingPage() {
       extras: state.extras,
       bought: state.bought,
     });
-  }, [state.bought, state.extras, state.ledger, state.menuDishIds, state.menuLedgerIds]);
+  }, [
+    state.bought,
+    state.extras,
+    state.ledger,
+    state.menuDishIds,
+    state.menuLedgerIds,
+  ]);
 
   const total = list.foods.length + list.seasonings.length;
   const empty = total === 0 && list.sources.length === 0;
@@ -87,17 +143,23 @@ export function ShoppingPage() {
   const copyList = async () => {
     if (!oncePrimary("shop-copy")) return;
     const ok = await copyText(shoppingText(list));
-    toast(ok ? "已复制（含未勾选的盒马可搜关键词）" : "没能复制，请手动选择文字");
+    toast(
+      ok ? "已复制（含未勾选的盒马可搜关键词）" : "没能复制，请手动选择文字",
+    );
   };
 
   const copyUncheckedList = async () => {
     if (!oncePrimary("shop-copy-unchecked")) return;
-    const open = [...list.foods, ...list.seasonings].filter((item) => !item.bought);
+    const open = [...list.foods, ...list.seasonings].filter(
+      (item) => !item.bought,
+    );
     if (open.length === 0) {
       toast("没有未勾选项");
       return;
     }
-    const ok = await copyText(shoppingText(list, new Date(), { uncheckedOnly: true }));
+    const ok = await copyText(
+      shoppingText(list, new Date(), { uncheckedOnly: true }),
+    );
     toast(ok ? `已复制 ${open.length} 项未勾选` : "没能复制，请手动选择文字");
   };
 
@@ -119,9 +181,14 @@ export function ShoppingPage() {
     }
     setHemaActive(true);
     setHemaIndex(0);
-    openHema(uncheckedTerms[0]!, state.hemaTemplate, toast);
+    if (!openHema(uncheckedTerms[0]!, state.hemaTemplate, toast)) {
+      setHemaActive(false);
+      return;
+    }
     if (uncheckedTerms.length > 1) {
-      toast(`已开第 1/${uncheckedTerms.length}：${uncheckedTerms[0]} · 不是一键加购`);
+      toast(
+        `正在打开第 1/${uncheckedTerms.length}：${uncheckedTerms[0]} · 不是一键加购`,
+      );
     }
   };
 
@@ -138,8 +205,13 @@ export function ShoppingPage() {
       return;
     }
     setHemaIndex(next);
-    openHema(uncheckedTerms[next]!, state.hemaTemplate, toast);
-    toast(`已开第 ${next + 1}/${uncheckedTerms.length}：${uncheckedTerms[next]}`);
+    if (!openHema(uncheckedTerms[next]!, state.hemaTemplate, toast)) {
+      setHemaActive(false);
+      return;
+    }
+    toast(
+      `正在打开第 ${next + 1}/${uncheckedTerms.length}：${uncheckedTerms[next]}`,
+    );
   };
 
   const stopHemaWalk = () => {
@@ -148,13 +220,23 @@ export function ShoppingPage() {
   };
 
   const renderItem = (item: ShopItem, keyPrefix = "") => (
-    <li key={`${keyPrefix}${item.role}-${item.name}`} className={item.bought ? "shop-item is-bought" : "shop-item"}>
+    <li
+      key={`${keyPrefix}${item.role}-${item.name}`}
+      className={item.bought ? "shop-item is-bought" : "shop-item"}
+    >
       <label className="shop-check">
-        <input type="checkbox" checked={item.bought} onChange={() => toggleBought(item.name)} />
+        <input
+          type="checkbox"
+          checked={item.bought}
+          onChange={() => toggleBought(item.name)}
+        />
         <span>
           <strong>
             {item.name}
-            {item.extraId ? (
+            {item.amount ? (
+              <span className="shop-amount"> · {item.amount}</span>
+            ) : null}
+            {item.extraItems?.length ? (
               <em className="temp-chip" title="临时项 · 仅本机 · 不进同步">
                 仅本机
               </em>
@@ -169,38 +251,155 @@ export function ShoppingPage() {
         </span>
       </label>
       <span className="shop-actions">
-        {item.extraId && (
-          <button type="button" className="linkish" onClick={() => removeExtra(item.extraId ?? "")}>
-            删掉
+        {item.extraItems?.map((extra) => (
+          <button
+            key={extra.id}
+            type="button"
+            className="linkish"
+            onClick={() => removeExtra(extra.id)}
+            aria-label={`删除临时项 ${extra.name}`}
+          >
+            删除 {extra.name}
           </button>
-        )}
+        ))}
         <button
           type="button"
-          className="hema-btn"
-          onClick={() => openHema(item.name, state.hemaTemplate, toast)}
-          title={`复制并打开盒马搜索「${hemaSearchTerm(item.name) || item.name}」· 不是一键加购`}
-          aria-label={`在盒马搜「${hemaSearchTerm(item.name) || item.name}」，仅搜索不是加购`}
+          className="btn-ghost"
+          onClick={() =>
+            void copyText(hemaSearchTerm(item.name)).then((ok) =>
+              toast(
+                ok
+                  ? `已复制「${hemaSearchTerm(item.name)}」，请在盒马粘贴搜索`
+                  : "复制失败，请长按食材名复制",
+              ),
+            )
+          }
         >
-          <span className="hema-btn-main">在盒马搜</span>
-          <span className="hema-btn-q">搜「{hemaSearchTerm(item.name) || item.name}」</span>
+          复制食材名
         </button>
+        <a
+          href={hemaLaunchHref()}
+          data-hema-term={hemaSearchTerm(item.name)}
+          className="hema-btn"
+          onClick={() => openHema(item.name, state.hemaTemplate, toast, false)}
+          title={`打开盒马 App，准备食材「${hemaSearchTerm(item.name) || item.name}」· 不是一键加购`}
+          aria-label={`打开盒马「${hemaSearchTerm(item.name) || item.name}」，在 App 中选择商品和数量`}
+        >
+          <span className="hema-btn-main">打开盒马</span>
+          <span className="hema-btn-q">
+            需搜索「{hemaSearchTerm(item.name) || item.name}」
+          </span>
+        </a>
       </span>
     </li>
   );
 
   return (
     <div className="page">
+      <Sheet
+        open={Boolean(duplicate)}
+        title="已有同名临时项"
+        onClose={() => setDuplicate("")}
+      >
+        <p>
+          「{duplicate}
+          」要追加数量，还是替换之前的同名临时项？菜谱原有用量会保留。
+        </p>
+        <div className="row-btns">
+          <button
+            className="btn-primary"
+            onClick={() => commitExtra(duplicate)}
+          >
+            追加一条
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() => commitExtra(duplicate, "replace")}
+          >
+            替换临时项
+          </button>
+          <button className="btn-ghost" onClick={() => setDuplicate("")}>
+            取消
+          </button>
+        </div>
+      </Sheet>
       <header className="page-intro">
         <p className="eyebrow">买完就回家做饭</p>
         <h1 className="page-title">采购清单</h1>
         <p className="hint">
-          食材从菜名拆出来。可按菜分看，或合并去重；勾选与下方临时项只记在本机，不进双人同步。
+          今晚要买的食材，勾一项，少一项。
           {list.servingsScaled
-            ? "用量按详情里记过的份数缩放（未改菜谱底稿）。"
-            : "份量默认按两人份心估。"}
+            ? "用量已按所选人数换算。"
+            : "有标注的用量按两人份列出。"}
         </p>
       </header>
 
+      {params.get("hemaTerm") ? (
+        <section className="panel">
+          <h2>接着采购：{params.get("hemaTerm")?.slice(0, 300)}</h2>
+          <p className="hint">
+            从微信带来的食材名。盒马打开后，请粘贴到搜索框；尚未自动搜索或加购。
+          </p>
+          <div className="row-btns wrap">
+            <button
+              className="btn-secondary"
+              onClick={() =>
+                void copyText(params.get("hemaTerm")!.slice(0, 300)).then(
+                  (ok) =>
+                    toast(ok ? "食材名已复制" : "复制失败，请手动选择食材名"),
+                )
+              }
+            >
+              复制食材名
+            </button>
+            <a
+              className="btn-primary"
+              href={hemaLaunchHref()}
+              data-hema-term={params.get("hemaTerm")?.slice(0, 300)}
+            >
+              打开盒马
+            </a>
+          </div>
+        </section>
+      ) : null}
+      <details
+        className="panel hema-product-share"
+        open={params.has("hemaShare") ? true : undefined}
+      >
+        <summary>打开盒马商品口令</summary>
+        <p className="hint">
+          粘贴盒马分享的商品口令，打开 App 后确认商品与规格，再加购物车。
+        </p>
+        <label className="field">
+          商品口令或链接
+          <textarea
+            value={productShare}
+            maxLength={4000}
+            onChange={(event) => {
+              const text = event.target.value;
+              setProductShare(text);
+              try {
+                localStorage.setItem("jte.hema.productShare", text);
+              } catch {
+                toast("商品口令暂未保存");
+              }
+            }}
+            placeholder="粘贴盒马 App 的商品分享内容"
+          />
+        </label>
+        <button
+          className="btn-primary"
+          disabled={!productShare.trim()}
+          onClick={() => openHemaShare(productShare, toast)}
+        >
+          带口令打开盒马
+        </button>
+      </details>
+
+      <p className="hint">
+        打不开 App？<a href="app-check.html">测试手机打开方式</a>
+        ，选中能用的方式后将应用到本机。
+      </p>
       {empty ? (
         <div className="empty shop-empty">
           <span className="empty-art shop-empty-art" aria-hidden="true">
@@ -209,10 +408,17 @@ export function ShoppingPage() {
           <strong>清单还是空的</strong>
           <p>先摇一桌，或从菜单里挑今晚要做的。也可先记一条仅本机的临时项。</p>
           <div className="empty-actions">
-            <button type="button" className="btn-primary" onClick={() => { if (!oncePrimary("roll")) return; rollTonight(); }}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => {
+                if (!oncePrimary("roll")) return;
+                rollTonight();
+              }}
+            >
               随机开饭
             </button>
-            <Link className="btn-ghost" to="/">
+            <Link className="btn-ghost" to="/tonight">
               看今晚菜单
             </Link>
           </div>
@@ -220,36 +426,43 @@ export function ShoppingPage() {
             className="add-row shop-temp-add"
             onSubmit={(event) => {
               event.preventDefault();
-              const name = draft.trim();
-              if (!name) return;
-              addExtra(name);
-              setDraft("");
-              toast("已加临时项（仅本机，不进同步）");
-              hapticTap();
+              submitExtra();
             }}
           >
             <input
+              maxLength={1000}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="临时加一样，比如香菜"
               aria-label="添加临时食材，仅本机"
             />
-            <button type="submit" className="btn-ghost" disabled={!draft.trim()}>
+            <button
+              type="submit"
+              className="btn-ghost"
+              disabled={!draft.trim()}
+            >
               加上
             </button>
           </form>
-          <p className="hint shop-temp-hint">临时项仅本机，不进双人同步；新开今晚不会自动清掉。</p>
+          <p className="hint shop-temp-hint">
+            临时项仅本机，不进双人同步；新开今晚不会自动清掉。
+          </p>
         </div>
       ) : (
         <>
           {(() => {
-            const unchecked = [...list.foods, ...list.seasonings].filter((i) => !i.bought).length;
-            const merged = [...list.foods, ...list.seasonings].filter((i) => i.sourceCount > 1).length;
+            const unchecked = [...list.foods, ...list.seasonings].filter(
+              (i) => !i.bought,
+            ).length;
+            const merged = [...list.foods, ...list.seasonings].filter(
+              (i) => i.sourceCount > 1,
+            ).length;
             return (
               <>
                 <p className="shop-summary" role="status">
                   <span className="shop-summary-left">
-                    未勾选 <strong className="shop-unchecked-n">{unchecked}</strong> 项
+                    未勾选{" "}
+                    <strong className="shop-unchecked-n">{unchecked}</strong> 项
                     {total - unchecked > 0 ? (
                       <>
                         {" "}
@@ -257,8 +470,19 @@ export function ShoppingPage() {
                         {hideBought ? "（已折叠）" : ""}
                       </>
                     ) : null}
-                    {merged > 0 ? <> · 已合并去重 <strong>{merged}</strong> 项</> : null}
-                    {list.servingsScaled ? <> · <em className="servings-scale-note">用量按详情份数</em></> : null}
+                    {merged > 0 ? (
+                      <>
+                        {" "}
+                        · 已合并去重 <strong>{merged}</strong> 项
+                      </>
+                    ) : null}
+                    {list.servingsScaled ? (
+                      <>
+                        {" "}
+                        ·{" "}
+                        <em className="servings-scale-note">用量按详情份数</em>
+                      </>
+                    ) : null}
                   </span>
                   <span className="shop-summary-right">共 {total} 项</span>
                 </p>
@@ -276,8 +500,13 @@ export function ShoppingPage() {
                     <span>折叠已勾选</span>
                   </label>
                 ) : null}
-                <p className="print-servings shop-print-servings" aria-hidden="true">
-                  {list.servingsScaled ? "用量按详情里记过的份数缩放" : "份量默认按两人份心估"}
+                <p
+                  className="print-servings shop-print-servings"
+                  aria-hidden="true"
+                >
+                  {list.servingsScaled
+                    ? "用量按详情里记过的份数缩放"
+                    : "份量默认按两人份心估"}
                 </p>
               </>
             );
@@ -303,10 +532,16 @@ export function ShoppingPage() {
           )}
 
           {groupMode === "merged" && list.unparsed.length > 0 && (
-            <p className="hint">这几道没拆出主料，待完善：{list.unparsed.join("、")}</p>
+            <p className="hint">
+              这几道没拆出主料，待完善：{list.unparsed.join("、")}
+            </p>
           )}
 
-          <div className="shop-group-toggle segmented" role="tablist" aria-label="采购分组">
+          <div
+            className="shop-group-toggle segmented"
+            role="tablist"
+            aria-label="采购分组"
+          >
             <button
               type="button"
               role="tab"
@@ -335,7 +570,11 @@ export function ShoppingPage() {
                   {group.items.length === 0 ? (
                     <p className="hint">这道还没拆出主料，先对照视频。</p>
                   ) : (
-                    <ul className="shop-list">{group.items.filter((item) => !(hideBought && item.bought)).map((item) => renderItem(item, `${group.key}:`))}</ul>
+                    <ul className="shop-list">
+                      {group.items
+                        .filter((item) => !(hideBought && item.bought))
+                        .map((item) => renderItem(item, `${group.key}:`))}
+                    </ul>
                   )}
                 </section>
               ))}
@@ -349,7 +588,11 @@ export function ShoppingPage() {
                 <section>
                   <h2 className="block-title">食材</h2>
                   <p className="hint">从菜名里拆出来的，已合并去重。</p>
-                  <ul className="shop-list">{list.foods.filter((item) => !(hideBought && item.bought)).map((item) => renderItem(item))}</ul>
+                  <ul className="shop-list">
+                    {list.foods
+                      .filter((item) => !(hideBought && item.bought))
+                      .map((item) => renderItem(item))}
+                  </ul>
                 </section>
               )}
 
@@ -357,7 +600,11 @@ export function ShoppingPage() {
                 <section>
                   <h2 className="block-title">调味</h2>
                   <p className="hint">家常估算，下锅前再对一眼。待完善。</p>
-                  <ul className="shop-list">{list.seasonings.filter((item) => !(hideBought && item.bought)).map((item) => renderItem(item))}</ul>
+                  <ul className="shop-list">
+                    {list.seasonings
+                      .filter((item) => !(hideBought && item.bought))
+                      .map((item) => renderItem(item))}
+                  </ul>
                 </section>
               )}
             </>
@@ -367,21 +614,21 @@ export function ShoppingPage() {
             className="add-row shop-temp-add"
             onSubmit={(event) => {
               event.preventDefault();
-              const name = draft.trim();
-              if (!name) return;
-              addExtra(name);
-              setDraft("");
-              toast("已加临时项（仅本机，不进同步）");
-              hapticTap();
+              submitExtra();
             }}
           >
             <input
+              maxLength={1000}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="临时加一样，比如香菜"
               aria-label="添加临时食材，仅本机"
             />
-            <button type="submit" className="btn-ghost" disabled={!draft.trim()}>
+            <button
+              type="submit"
+              className="btn-ghost"
+              disabled={!draft.trim()}
+            >
               加上
             </button>
           </form>
@@ -420,10 +667,13 @@ export function ShoppingPage() {
                 <h2 className="block-title" style={{ margin: 0 }}>
                   盒马搜索
                 </h2>
-                <span className="hema-multi-count">{uncheckedTerms.length} 个未勾选</span>
+                <span className="hema-multi-count">
+                  {uncheckedTerms.length} 个未勾选
+                </span>
               </div>
               <p className="hint hema-honest-hint">
-                只是搜索 / 深链，不是一键加购。可逐条打开，或复制关键词去 App 粘贴。
+                只是搜索 / 深链，不是一键加购。可逐条打开，或复制关键词去 App
+                粘贴。
               </p>
               <div className="hema-keyword-preview" aria-label="关键词预览">
                 {uncheckedTerms.slice(0, 12).map((term) => (
@@ -431,36 +681,57 @@ export function ShoppingPage() {
                     key={term}
                     type="button"
                     className="chip hema-kw-chip"
-                    title={`在盒马搜「${term}」`}
+                    title={`打开盒马「${term}」`}
                     onClick={() => openHema(term, state.hemaTemplate, toast)}
                   >
                     {term}
                   </button>
                 ))}
                 {uncheckedTerms.length > 12 ? (
-                  <span className="hint">…还有 {uncheckedTerms.length - 12} 个</span>
+                  <span className="hint">
+                    …还有 {uncheckedTerms.length - 12} 个
+                  </span>
                 ) : null}
               </div>
               <div className="row-btns wrap hema-multi-actions">
-                <button type="button" className="btn-secondary" onClick={startHemaWalk}>
-                  逐条在盒马搜
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={startHemaWalk}
+                >
+                  逐条打开盒马
                 </button>
-                <button type="button" className="btn-ghost" onClick={() => void copyUncheckedForHema()}>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => void copyUncheckedForHema()}
+                >
                   复制未勾选关键词
                 </button>
               </div>
               {hemaActive ? (
                 <div className="hema-walk-bar" role="status">
                   <span>
-                    正在逐条搜 · 第 {Math.min(hemaIndex + 1, uncheckedTerms.length)}/
+                    正在逐条搜 · 第{" "}
+                    {Math.min(hemaIndex + 1, uncheckedTerms.length)}/
                     {uncheckedTerms.length}
-                    {uncheckedTerms[hemaIndex] ? ` · ${uncheckedTerms[hemaIndex]}` : ""}
+                    {uncheckedTerms[hemaIndex]
+                      ? ` · ${uncheckedTerms[hemaIndex]}`
+                      : ""}
                   </span>
                   <span className="hema-walk-actions">
-                    <button type="button" className="btn-secondary compact" onClick={nextHema}>
+                    <button
+                      type="button"
+                      className="btn-secondary compact"
+                      onClick={nextHema}
+                    >
                       下一条
                     </button>
-                    <button type="button" className="btn-ghost compact" onClick={stopHemaWalk}>
+                    <button
+                      type="button"
+                      className="btn-ghost compact"
+                      onClick={stopHemaWalk}
+                    >
                       结束
                     </button>
                   </span>
@@ -470,7 +741,11 @@ export function ShoppingPage() {
           ) : null}
 
           <div className="row-btns stack-top shop-check-toolbar">
-            <button type="button" className="btn-primary" onClick={() => void copyList()}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => void copyList()}
+            >
               复制清单
             </button>
             <button
@@ -478,7 +753,11 @@ export function ShoppingPage() {
               className="btn-secondary"
               onClick={() => void copyUncheckedList()}
               disabled={uncheckedItems.length === 0}
-              title={uncheckedItems.length === 0 ? "没有未勾选项" : "只复制尚未勾选的食材行"}
+              title={
+                uncheckedItems.length === 0
+                  ? "没有未勾选项"
+                  : "只复制尚未勾选的食材行"
+              }
             >
               复制未勾选
             </button>
@@ -486,7 +765,9 @@ export function ShoppingPage() {
               type="button"
               className="btn-secondary"
               onClick={() => {
-                const names = [...list.foods, ...list.seasonings].map((item) => item.name);
+                const names = [...list.foods, ...list.seasonings].map(
+                  (item) => item.name,
+                );
                 if (names.length === 0) {
                   toast("清单是空的");
                   return;
@@ -506,9 +787,13 @@ export function ShoppingPage() {
                   toast("清单是空的");
                   return;
                 }
-                const next = items.filter((item) => !item.bought).map((item) => item.name);
+                const next = items
+                  .filter((item) => !item.bought)
+                  .map((item) => item.name);
                 setBought(next);
-                toast(`已反选（未勾 ${next.length} / 共 ${items.length}，只影响本机）`);
+                toast(
+                  `已反选（未勾 ${next.length} / 共 ${items.length}，只影响本机）`,
+                );
               }}
             >
               反选
@@ -527,9 +812,9 @@ export function ShoppingPage() {
           </div>
 
           <p className="hema-note hema-honest-hint">
-            <strong>「在盒马搜」</strong>会复制关键词并打开搜索页（中文会做 URL 编码），同时试一次唤起淘宝/盒马系 App。
-            这是搜索 / 深链，不是 SKU 一键加购；没有公开加购接口，也不会假装放进购物车。
-            唤不起或弹窗被拦时，打开盒马 App 粘贴最省事。链接模板在「我们」里可改。
+            <strong>打开盒马</strong>会优先唤起手机上的盒马
+            App，并准备食材关键词。若系统询问是否打开，请允许。
+            未安装或浏览器拦截时，会进入盒马官方打开页面。具体商品、规格和数量需在盒马中选择，目前不会自动加购。
           </p>
         </>
       )}

@@ -49,6 +49,7 @@ export type Dish = {
 };
 
 export type LedgerEntry = {
+  baseServings?: number;
   id: string;
   name: string;
   notes: string;
@@ -64,6 +65,7 @@ export type ExtraItem = {
 };
 
 export type AppState = {
+  sync?: import("./lib/replica.ts").SyncDocument;
   theme: ThemeId;
   hearts: string[];
   menuDishIds: string[];

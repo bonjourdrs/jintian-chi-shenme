@@ -1,0 +1,434 @@
+{
+  "stats": {
+    "total": 38,
+    "categories": {
+      "交互": 12,
+      "设计": 10,
+      "逻辑": 16
+    },
+    "priorities": {
+      "P1": 11,
+      "P2": 27
+    }
+  },
+  "findings": [
+    {
+      "id": 1,
+      "category": "交互",
+      "priority": "P1",
+      "verification": "浏览器复现",
+      "title": "重新摇一桌直接覆盖手选菜单",
+      "detail": "已有手选菜和自定义账本菜时，点击首页“摇一桌”会清空原菜单、自定义菜引用和采购勾选，没有替换确认或整桌撤销。",
+      "recommendation": "已有菜单时提供“替换整桌 / 补齐缺菜”，并保留整桌撤销。",
+      "source": "src/state/store.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 2,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "浏览器复现",
+      "title": "从菜品详情回首页，搜索条件丢失",
+      "detail": "输入“鸡蛋”、点开结果再回菜单，搜索框变为空，结果与筛选上下文丢失。",
+      "recommendation": "把查询与筛选写入 URL 或保留到会话。",
+      "source": "src/pages/HomePage.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 3,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "代码确认",
+      "title": "手机端不能多选加入今晚",
+      "detail": "多选入口及选择模式被 isDesk 限定；手机用户为搭一桌菜需要反复进入详情。",
+      "recommendation": "给手机端提供多选模式或卡片快捷加入。",
+      "source": "src/pages/DishListPage.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 4,
+      "category": "交互",
+      "priority": "P1",
+      "verification": "浏览器复现",
+      "title": "账本编辑离开后丢稿",
+      "detail": "新建菜写入内容后点采购导航，再回新建页，内容为空；没有草稿恢复或离开确认。",
+      "recommendation": "自动保存草稿；有未提交修改时拦截离开。",
+      "source": "src/pages/LedgerEditPage.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 5,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "浏览器复现",
+      "title": "重复临时项被忽略，却提示添加成功",
+      "detail": "已有“土豆300g”，再加“土豆200g”，实际仍只有第一项，toast 却说“已加临时项”。",
+      "recommendation": "重复时提示现有数量，允许相加、替换或取消。",
+      "source": "src/state/store.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 6,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "函数复现",
+      "title": "临时项合并后失去单独删除入口",
+      "detail": "菜谱中有土豆，另加土豆2个，合并视图把 extraId 隐去，因而不再显示该临时项的删除按钮。按菜模式能找到，但删除能力随视图变化。",
+      "recommendation": "保留来源明细，在合并行里允许删除临时来源。",
+      "source": "src/lib/shopping.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 7,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "设计建议",
+      "title": "播放图标与实际行为不一致",
+      "detail": "卡片上的播放形状按钮实际进入详情的教程区域，并不直接播放；进入后通常还需另点外部教程。",
+      "recommendation": "改为“教程”入口，明确外部跳转，或提供真正的预览。",
+      "source": "src/components/DishCard.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 8,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "代码确认",
+      "title": "加入房间的成功反馈过早",
+      "detail": "joinRoom 在尚未确认对方存在、连接也未建立时，就提示“已加入”；虽然同时有“正在找对方”，两种状态仍混淆。",
+      "recommendation": "区分“正在查找 / 已连接 / 房间不可达”，只在握手成功后确认加入。",
+      "source": "src/state/couple.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 9,
+      "category": "交互",
+      "priority": "P1",
+      "verification": "代码确认",
+      "title": "云备份成功被表述为已同步给对方",
+      "detail": "SyncChip 仅根据 lastSyncedAt 就显示“已同步给对方”；云备份写入也会更新时间，不能证明对方已收到。",
+      "recommendation": "分别显示本机已保存、云端已备份、对方已确认接收。",
+      "source": "src/components/SyncChip.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 10,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "代码确认",
+      "title": "网络操作没有应用层超时",
+      "detail": "云端 fetch 没有 AbortController 或超时截止；请求悬而未决时，同步/创建的 busy 状态可能长时间占用，缺少取消路径。",
+      "recommendation": "设置请求截止时间，提供取消与重试，并允许继续本机编辑。",
+      "source": "src/lib/coupleRoom.ts",
+      "evidence": ""
+    },
+    {
+      "id": 11,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "浏览器复现",
+      "title": "关闭上层弹窗后，焦点落到 body",
+      "detail": "首次引导中打开选主题，再关闭主题弹窗，剩余引导仍打开，但 activeElement 是 BODY，不在剩余 dialog 内。",
+      "recommendation": "关闭最上层时把焦点送回下层弹窗的触发按钮。",
+      "source": "src/components/Sheet.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 12,
+      "category": "交互",
+      "priority": "P2",
+      "verification": "浏览器复现",
+      "title": "烹饪计时刷新后丢失",
+      "detail": "启动1分钟计时后刷新，回到非开做页面，暂停/倒计时控件消失；计时截止时间没有恢复机制。",
+      "recommendation": "保存计时截止时间和当前步骤，重进页面询问是否恢复。",
+      "source": "src/pages/DishPage.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 13,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "浏览器测量",
+      "title": "手机首页的晚餐摘要位置太深",
+      "detail": "390×844 视口中，“今晚这一桌”从约 y=1506px 才开始，已选菜单的核心信息落在推荐菜之后。",
+      "recommendation": "移动端把已选数量、菜名和去采购放在主动作旁边。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/home-mobile.png"
+    },
+    {
+      "id": 14,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "浏览器测量",
+      "title": "分类横向溢出却缺少滑动提示",
+      "detail": "分类区宽350px、内容482px；最后“主食”的起点 x=440，首屏看不见，也没有明显滚动条或渐隐提示。",
+      "recommendation": "提供可见的横滑提示、换行或“更多分类”。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 15,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "设计建议",
+      "title": "“菜单”导航实际指向首页",
+      "detail": "主导航的“菜单”回到 /，而完整900道菜位于 /browse；一个名称对应首页和菜库两种心智。",
+      "recommendation": "明确命名“首页/菜库”，或把主菜单直接设为菜库。",
+      "source": "src/components/Shell.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 16,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "设计建议",
+      "title": "想吃收藏藏在“我们”里",
+      "detail": "收藏数量显示在“我们”的角标上，但导航名字没有提示收藏，且收藏列表在同步区之后。",
+      "recommendation": "提供清晰的“想吃”入口，角标靠近真正的收藏入口。",
+      "source": "src/pages/UsPage.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 17,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "设计建议",
+      "title": "新手引导先讲换肤",
+      "detail": "第一步是选主题，第二步才找晚饭；换肤还打开另一层弹窗，使新用户先处理外观设置。",
+      "recommendation": "先完成选菜或摇一桌，主题放在后续可选设置。",
+      "source": "src/components/OnboardSheet.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 18,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "设计建议",
+      "title": "菜品卡片的信息层级过满",
+      "detail": "封面上有精修、来源和视频标识，底部再次展示“精”、分类、点赞、分钟，来源图片本身还可能带字。",
+      "recommendation": "优先菜名、耗时和加入动作；来源与次要统计收进详情。",
+      "source": "src/components/DishCard.tsx",
+      "evidence": "evidence/cafe-journal.png"
+    },
+    {
+      "id": 19,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "浏览器测量",
+      "title": "多处文字只有10–11px",
+      "detail": "主按钮副文案10px，调整搭配和品牌副文案11px；手机上需要费力辨认，关键操作说明比装饰更弱。",
+      "recommendation": "扩大功能性文字，减少非必要小字。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 20,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "浏览器测量",
+      "title": "部分点击区域明显偏小",
+      "detail": "“调整搭配”实际高度16px，“全部900道”约18px，“我们”约26×21px，容易误触或点不中。",
+      "recommendation": "视觉文字可保持简洁，但用内边距扩大真实点击区域。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 21,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "截图确认",
+      "title": "暗色主题主按钮副文案近乎不可读",
+      "detail": "黑板/午夜主题把按钮背景改为透明，但副文案仍固定为深棕 #4d2409，落在深色背景上。",
+      "recommendation": "副文案使用主题语义颜色，并逐主题检查组件状态。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/kitchen-chalkboard.png"
+    },
+    {
+      "id": 22,
+      "category": "设计",
+      "priority": "P2",
+      "verification": "截图确认",
+      "title": "水彩主题主动作脱离绿色体系",
+      "detail": "该主题强调色为 #3f7d55，摇一桌却保留固定亮橙背景；不同层级的主动作缺少一致规则。",
+      "recommendation": "统一主题主动作、选中态与提示态的颜色映射。",
+      "source": "src/styles/redesign.css",
+      "evidence": "evidence/watercolor-market.png"
+    },
+    {
+      "id": 23,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "浏览器及函数复现",
+      "title": "搜索承诺支持食材，实际没有食材索引",
+      "detail": "搜索“冰糖”只找到菜名包含冰糖的一道菜；红烧鸡翅等确实包含冰糖的食谱没有返回。",
+      "recommendation": "对真实 ingredients 建索引，区分菜名、食材和分类命中。",
+      "source": "src/data/catalog.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 24,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "函数复现",
+      "title": "已知用量与未知用量合并后，未知部分消失",
+      "detail": "菜A土豆300g、菜B土豆未写数量，结果显示“土豆300克、来源菜A/菜B”，容易被当成两道菜总量。",
+      "recommendation": "显示“已知300克 + 1道用量待定”，不要把部分合计当完整合计。",
+      "source": "src/lib/shopping.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 25,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "函数复现",
+      "title": "需求增加后仍沿用已买勾选",
+      "detail": "鸡蛋2个已经买好，新加一道需要3个的菜后，总数变5个，整行仍 bought=true，未买需求被隐藏。",
+      "recommendation": "按需求数量或采购批次记录已买量；需求变化时提示补买。",
+      "source": "src/lib/shopping.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 26,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "函数复现",
+      "title": "账本里的调味料全部被归为主食材",
+      "detail": "手写“盐1勺、生抽2勺、鸡蛋3个”，三项都进入 foods，盐和生抽不会进入调味区。",
+      "recommendation": "账本支持食材角色，或用明确的调味别名规则辅助分类。",
+      "source": "src/lib/shopping.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 27,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "函数复现",
+      "title": "今晚与采购使用不同食材分隔规则",
+      "detail": "同一行“鸡蛋3个、番茄2个；盐少许”，采购拆成三项，今晚聚合仍是一整项。",
+      "recommendation": "所有入口共用 splitIngredientText，统一输入提示和导出。",
+      "source": "src/pages/TonightPage.tsx",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 28,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "代码确认",
+      "title": "统一份数没有覆盖账本菜",
+      "detail": "统一份数只给 menuDishes 写份数；menuLedgerIds 对应的菜不参与换算，界面“今晚每道菜”说法过宽。",
+      "recommendation": "为账本菜增加基准人数；未支持时明确标记“不参与缩放”。",
+      "source": "src/pages/TonightPage.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 29,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "代码及函数确认",
+      "title": "改单道菜人数会暗中改变全局默认",
+      "detail": "saveServingsForDish 同时写 per-dish 和全局 DEFAULT_KEY；把A改4人，未设置过的B随后也默认4人。",
+      "recommendation": "把“仅改本菜”和“设为以后默认”分开。",
+      "source": "src/lib/servings.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 30,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "函数复现",
+      "title": "部分清除统一份数会丢掉其余恢复快照",
+      "detail": "A原2人、B原3人，统一为4人后只清除A，函数仍删除整份快照；B留4人，原3人设置无法通过清除恢复。",
+      "recommendation": "只删除已恢复条目的快照，剩余条目继续可恢复。",
+      "source": "src/lib/servings.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 31,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "浏览器复现",
+      "title": "多个标签页会相互覆盖收藏等状态",
+      "detail": "同一浏览器开两页，A收藏红烧鸡爪，B收藏另一道后，存储只剩B的收藏。主状态没有 storage 事件协调。",
+      "recommendation": "通过跨页通知和修订号合并，写入前读取最新状态。",
+      "source": "src/state/store.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 32,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "浏览器复现",
+      "title": "表单接受数据但持久化拒绝，出现假成功",
+      "detail": "输入301字菜名能点保存并跳到编辑页，同时出现成功/失败提示；stateSchema只接受300字，刷新后记录不在。",
+      "recommendation": "表单与存储共用验证；持久化成功后再提示成功及跳转。",
+      "source": "src/pages/LedgerEditPage.tsx",
+      "evidence": "evidence/browser.json"
+    },
+    {
+      "id": 33,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "函数复现",
+      "title": "双端独立修改仍会整包覆盖",
+      "detail": "A新记一道菜、B另记一道，应用B载荷后只剩B的账本。恢复点降低后果，但没有解决并发合并。",
+      "recommendation": "按实体修订合并，明确删除墓碑和可见冲突处理。",
+      "source": "src/lib/coupleSync.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 34,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "函数复现",
+      "title": "同步时间排序不足以稳定解决冲突",
+      "detail": "相同时间戳但不同内容直接判same；采用过异常未来时间后，正常时间的对方更新会持续被判旧。",
+      "recommendation": "加入客户端标识与确定性顺序，并限制异常时钟输入。",
+      "source": "src/lib/coupleSync.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 35,
+      "category": "逻辑",
+      "priority": "P1",
+      "verification": "代码风险",
+      "title": "先读后写仍存在并发覆盖窗口",
+      "detail": "两个设备可以读到同一云版本，再先后PUT；没有服务端版本条件，后写仍可覆盖另一方。此项未执行真实双端并发测试。",
+      "recommendation": "使用带版本条件的写入或有合并能力的后端。",
+      "source": "src/lib/coupleRoom.ts",
+      "evidence": ""
+    },
+    {
+      "id": 36,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "函数复现",
+      "title": "带分数的中文混合数量会被错误拆解",
+      "detail": "“生抽1又1/2勺”被拆为名称“生抽1又”和数量0.5；翻倍得到“生抽1又 1勺”，并非3勺。",
+      "recommendation": "完整解析带分数；无法解析时保留原文，不做部分数字换算。",
+      "source": "src/lib/amounts.ts",
+      "evidence": "evidence/logic.json"
+    },
+    {
+      "id": 37,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "代码风险",
+      "title": "仅本机临时项也推进共享同步时钟",
+      "detail": "addExtra/removeExtra 走统一 patch，patch 总会 bumpSyncClock；未共享的动作也可能使后来收到的共享更新被当作较旧。",
+      "recommendation": "共享数据和本机状态分别维护修订号。",
+      "source": "src/state/store.tsx",
+      "evidence": ""
+    },
+    {
+      "id": 38,
+      "category": "逻辑",
+      "priority": "P2",
+      "verification": "代码确认",
+      "title": "损坏状态被隔离后缺少用户恢复入口",
+      "detail": "loadState 会保存原文到 jte.recovery.corrupt.v1，再返回空状态；界面没有针对这份原始隔离数据的解释或导出入口。现有导入前/同步前恢复按钮并不读取该键。",
+      "recommendation": "显示可理解的恢复提示，允许导出隔离原文并尝试修复。",
+      "source": "src/lib/storage.ts",
+      "evidence": ""
+    }
+  ]
+}
