@@ -2,7 +2,7 @@
 
 两人晚饭用的渐进式网页应用（PWA）。手机优先，也能在电脑浏览器里用。纯静态，没有后端，可以添加到主屏幕。
 
-在线演示：<https://jintian-chi-shenme.deed.page/>
+在线演示：<https://jintian-chi-shenme-public.loyal-tuna-9474.chatgpt.site/#/>
 
 翻分类、看菜、摇一桌、列出要买的东西，再把只属于你们的菜写进账本。四套皮肤可以随时换。
 
