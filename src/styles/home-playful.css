@@ -8,7 +8,7 @@
 .home-playful .home-layout { grid-template-areas: 'hero hero' 'main summary'; gap: 28px; }
 .home-playful .dinner-hero { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(180px, .75fr); align-items: center; padding: 38px 38px 0; overflow: hidden; text-align: left; border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line)); border-radius: 28px; background: radial-gradient(ellipse at 85% 25%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 60%), linear-gradient(125deg, var(--art-bg), var(--paper)); }
 .home-playful .dinner-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: url('/assets/themes/cafe-paper.png') center / 700px; opacity: .13; pointer-events: none; }
-.home-playful .dinner-hero .eyebrow { display: flex; align-items: center; gap: 7px; font-size: 12px; letter-spacing: .06em; margin: 0 0 16px; }
+.home-playful .dinner-hero .eyebrow { display: flex; justify-content: flex-start; align-items: center; gap: 7px; font-size: 12px; letter-spacing: .06em; margin: 0 0 16px; }
 .home-playful .eyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .home-playful .dinner-hero h1 { font-size: clamp(32px, 3.2vw, 46px); line-height: 1.35; letter-spacing: -.045em; }
 .home-playful .dinner-hero h1 em { font-style: normal; color: var(--accent); }
