@@ -6,6 +6,7 @@ import "./styles/global.css";
 import "./styles/themes.css";
 import "./styles/redesign.css";
 import "./styles/overlays.css";
+import "./styles/home-playful.css";
 import { applyDensity, loadDensity } from "./lib/density.ts";
 import { applyGridCols, loadGridCols } from "./lib/gridCols.ts";
 import { applyGridGap, loadGridGap } from "./lib/gridGap.ts";

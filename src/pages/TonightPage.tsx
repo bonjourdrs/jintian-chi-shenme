@@ -492,7 +492,6 @@ ${hema}`
           </div>
           <SyncChip compact />
         </div>
-        <RollHistoryChips toast={toast} className="roll-history-tonight" />
         <div className="tonight-meal-summary" role="status">
           <button
             type="button"
@@ -551,6 +550,9 @@ ${hema}`
           })()}
         </div>
 
+        <details className="dinner-options">
+          <summary>份数、备忘与最近摇到 <span>按需调整</span></summary>
+          <RollHistoryChips toast={toast} className="roll-history-tonight" />
         <label className="tonight-note">
           <span className="sr-only">今晚备忘</span>
           <textarea
@@ -580,7 +582,7 @@ ${hema}`
             <div className="tonight-unified-head">
               <strong>统一份数</strong>
               <span className="hint">
-                应用到今晚每道菜的份数记忆（与详情「按几人」同一套，只记本机；采购预览/打印会按此缩放）
+                一起吃饭的人数变了？在这里统一调整，采购用量也会跟着换算。
               </span>
             </div>
             <div className="tonight-unified-row">
@@ -678,6 +680,7 @@ ${hema}`
             </p>
           </div>
         ) : null}
+        </details>
       </header>
 
       {empty ? (

@@ -7,7 +7,6 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import {
-  isOnboardDone,
   markOnboardDone,
   ONBOARD_REPLAY_EVENT,
 } from "../lib/onboard.ts";
@@ -40,9 +39,8 @@ const STEPS = [
 
 export function OnboardSheet() {
   const { openThemes, rollTonight } = useApp();
-  const [open, setOpen] = useState(() =>
-    typeof window === "undefined" ? false : !isOnboardDone(),
-  );
+  // Home explains the primary action directly; the guide stays available in settings.
+  const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const swipe = useRef<{ x: number; y: number; active: boolean }>({
     x: 0,

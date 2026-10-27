@@ -86,7 +86,7 @@ export function HomePage() {
     }
   };
   return (
-    <div className="page home home-v106">
+    <div className="page home home-v106 home-playful">
       <header className="home-top">
         <Link className="home-wordmark" to="/">
           今天吃什么<span>两个人的晚餐 · 简单又幸福</span>
@@ -100,31 +100,41 @@ export function HomePage() {
       </header>
       <div className="home-layout">
         <section className="dinner-hero" aria-labelledby="dinner-heading">
-          <p className="eyebrow">好好吃饭，就是生活的小确幸</p>
-          <h1 id="dinner-heading">今晚吃什么？</h1>
-          <p>一桌家常，两个人慢慢吃。</p>
+          <div className="roll-copy">
+            <p className="eyebrow"><span /> 选择困难，交给一点小运气</p>
+            <h1 id="dinner-heading">今天吃什么？<br /><em>摇一下，就有答案。</em></h1>
+            <p className="roll-description">不用再说“随便”。从家常菜里，摇出今晚的小惊喜。</p>
+            <button
+              type="button"
+              className="btn-primary hero-roll"
+              onClick={rollTonight}
+              disabled={rolling || rollCooling}
+            >
+              <Die pips={5} />
+              <span>{rolling ? "美味正在落定…" : rollCooling ? "菜单准备好了" : "帮我选 · 摇一桌"}</span>
+              <span className="roll-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button type="button" className="hero-meal linkish" onClick={openMeal}>
+              {mealSummary(state.meal)} <span>调整搭配 ›</span>
+            </button>
+          </div>
           <button
             type="button"
-            className="btn-primary hero-roll"
+            className={`lucky-die${rolling ? " is-rolling" : ""}`}
             onClick={rollTonight}
             disabled={rolling || rollCooling}
+            aria-label="点击骰子，随机搭配今晚菜单"
           >
+            <span className="lucky-orbit" aria-hidden="true" />
+            <span className="lucky-spark spark-one" aria-hidden="true">✦</span>
+            <span className="lucky-spark spark-two" aria-hidden="true">✧</span>
             <Die pips={5} />
-            <span>
-              {rolling ? "正在为你搭配…" : "摇一桌"}
-              <small>让今晚多一点惊喜</small>
-            </span>
+            <span className="lucky-label">点我，把纠结摇走</span>
           </button>
-          <button
-            type="button"
-            className="hero-meal linkish"
-            onClick={openMeal}
-          >
-            {mealSummary(state.meal)} · 调整搭配
-          </button>
+          <div className="roll-footer"><span>一点随机，一桌好菜</span><Link to="/browse">今天想自己挑？逛逛菜谱 →</Link></div>
         </section>
-        <DinnerSummary />
         <div className="home-main">
+          <div className="browse-intro"><span>慢慢挑，也很好</span><p>有想吃的食材？找一道合胃口的。</p></div>
           <form
             className="home-search-form"
             onSubmit={(event) => {
@@ -228,6 +238,7 @@ export function HomePage() {
             </section>
           ) : null}
         </div>
+        <DinnerSummary />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { catIcon, dishArt, kindArt, uiAsset, type EmptyKind, type NavAssetName } from "../lib/assets.ts";
+import { catIcon, dishArt, kindArt, uiAsset, navAsset, type EmptyKind, type NavAssetName } from "../lib/assets.ts";
 import { noteCoverFail, quietCoverRetryLabels } from "../lib/coverFail.ts";
 import { hashString, mulberry32 } from "../lib/random.ts";
 import { dishKind, dishTones, type Motif } from "../lib/visual.ts";
@@ -542,10 +542,8 @@ export function EmptyArt({ kind = "default", className }: { kind?: EmptyKind; cl
 }
 
 /** Codex nav mark; SVG stroke only on image error. */
-export function NavCodexIcon({ name, className }: { name: NavAssetName; fallback: ReactNode; className?: string }) {
-  if (name === "us") return <img src={`${import.meta.env.BASE_URL}assets/v106/dinner-couple.png`} className={className ?? "icon nav-codex"} alt="" aria-hidden="true" />;
-  const positions = { home: 4, menu: 0, shop: 1, ledger: 2 };
-  return <StateArt index={positions[name]} className={className ?? "icon nav-codex"} />;
+export function NavCodexIcon({ name, className, fallback }: { name: NavAssetName; fallback: ReactNode; className?: string }) {
+  return <AssetOrFallback src={navAsset(name)} imgClassName={className ?? "icon nav-codex"} fallback={fallback} />;
 }
 
 /** Desktop ornament / splash brand mark from Codex batch4. */
